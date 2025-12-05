@@ -12,7 +12,7 @@ juce_add_plugin(MyVST3Plugin
     COMPANY_EMAIL "info@example.com"
     PLUGIN_MANUFACTURER_CODE "ExCo"
     PLUGIN_CODE "Mvst"
-    FORMATS Standalone
+    FORMATS Standalone VST3
     PRODUCT_NAME "MyVST3Plugin"
     DESCRIPTION "A simple dual oscillator VST3 synthesizer"
     IS_SYNTH TRUE
