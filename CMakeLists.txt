@@ -12,7 +12,7 @@ juce_add_plugin(MyVST3Plugin
     COMPANY_EMAIL "info@example.com"
     PLUGIN_MANUFACTURER_CODE "ExCo"
     PLUGIN_CODE "Mvst"
-    FORMATS VST3
+    FORMATS Standalone
     PRODUCT_NAME "MyVST3Plugin"
     DESCRIPTION "A simple dual oscillator VST3 synthesizer"
     IS_SYNTH TRUE
@@ -33,6 +33,9 @@ target_compile_definitions(MyVST3Plugin
 )
 
 # Link JUCE modules
+# Generate JUCE header for easier development
+juce_generate_juce_header(MyVST3Plugin)
+
 target_link_libraries(MyVST3Plugin PRIVATE
     juce::juce_audio_basics
     juce::juce_audio_devices
@@ -52,12 +55,13 @@ target_link_libraries(MyVST3Plugin PRIVATE
 # Ensure MidiMessageCollector is available
 target_compile_definitions(MyVST3Plugin PRIVATE JUCE_USE_WINRT_MIDI=0)
 
+# Plugin will be manually copied after build
 # Enable plugin installation to VST3 directory
-if(WIN32)
-    add_custom_command(TARGET MyVST3Plugin POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        $<TARGET_FILE_DIR:MyVST3Plugin>/../VST3/MyVST3Plugin.vst3
-        "C:/Program Files/Common Files/VST3/MyVST3Plugin.vst3"
-        COMMENT "Copying plugin to VST3 directory"
-    )
-endif()
+# if(WIN32)
+#     add_custom_command(TARGET MyVST3Plugin POST_BUILD
+#         COMMAND ${CMAKE_COMMAND} -E copy_directory
+#         $<TARGET_FILE_DIR:MyVST3Plugin>/../VST3/MyVST3Plugin.vst3
+#         "C:/Program Files/Common Files/VST3/MyVST3Plugin.vst3"
+#         COMMENT "Copying plugin to VST3 directory"
+#     )
+# endif()
