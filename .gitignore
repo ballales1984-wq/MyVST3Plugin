@@ -1,9 +1,77 @@
-build/ 
-build_*/ 
-*.lib 
-*.exp 
-*.pdb 
-*.obj 
-CMakeCache.txt 
-CMakeFiles/ 
-.vs/ 
+# Build directories
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.vst3
+*.component
+*.aaxplugin
+*.app
+
+# Debug files
+*.pdb
+*.ilk
+*.obj
+*.lib
+*.exp
+
+# IDE files
+.vscode/
+.idea/
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.svclog
+*.cachefile
+*.scc
+*.suo
+*.user
+*.aps
+*.pch
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.log
+*.svclog
+*.scc
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# JUCE specific
+JuceLibraryCode/
+JUCE/modules/juce_audio_plugin_client/AAX/
+JUCE/modules/juce_audio_plugin_client/RTAS/

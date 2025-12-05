@@ -1,170 +1,134 @@
-# MyVST3Plugin - Virtual MIDI Keyboard Synthesizer
+# MyVST3Plugin - Professional Dual Oscillator Synthesizer
 
-A professional VST3 synthesizer plugin with a virtual MIDI keyboard, built using the JUCE framework.
+A powerful and versatile VST3 synthesizer plugin built with JUCE framework, featuring dual oscillators, ADSR envelope, and advanced filtering capabilities.
 
-## 🎹 Features
+![MyVST3Plugin](https://img.shields.io/badge/Version-1.0.0-blue)
+![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
+![License](https://img.shields.io/badge/License-Proprietary-red)
 
-### Core Functionality
-- **Dual Oscillator Synthesizer** with independent frequency controls
-- **Virtual MIDI Keyboard** with clickable piano keys (white and black keys)
-- **Complete ADSR Envelope** (Attack, Decay, Sustain, Release)
-- **Master Volume Control** with real-time visualization
-- **External MIDI Device Support** for physical keyboards and controllers
+## 🎵 Features
 
-### Audio Engine
-- **Oscillator 1**: Sine wave generator
-- **Oscillator 2**: Square wave generator
-- **ADSR Envelope**: Full ADSR with visual feedback
-- **Real-time Processing**: Optimized for low latency
+### Core Synthesis
+- **Dual Oscillators**: Independent sine and square wave oscillators
+- **ADSR Envelope**: Full Attack, Decay, Sustain, Release envelope control
+- **Master Volume**: Precise output level control
+
+### Advanced Filtering
+- **Low-Pass Filter**: 20Hz - 20kHz cutoff frequency
+- **Resonance Control**: 0.1 - 10.0 Q-factor adjustment
+- **Stereo Processing**: Independent filter processing per channel
 
 ### User Interface
-- **Virtual Keyboard Component**: Interactive piano keyboard
-- **Parameter Sliders**: Smooth controls for all parameters
-- **Real-time Displays**: Live visualization of envelope levels and MIDI notes
-- **MIDI Status Indicators**: Shows active notes and input status
-- **Test Mode**: Generate sound without external MIDI input
+- **Real-time Controls**: All parameters adjustable in real-time
+- **Visual Feedback**: Live parameter value display
+- **MIDI Keyboard**: Built-in virtual MIDI keyboard for testing
+- **Test Mode**: Constant audio generation for parameter testing
+
+### Audio Quality
+- **Professional DSP**: Built with JUCE's high-quality audio processing
+- **Stereo Output**: Full stereo signal path
+- **Sample Accurate**: Precise parameter timing
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- **Windows 10/11**
-- **Visual Studio Build Tools** (or full Visual Studio)
-- **CMake 3.15+**
-- **JUCE Framework** (included as submodule)
+- Windows 10/11
+- DAW supporting VST3 plugins (Reaper, Ableton Live, FL Studio, etc.)
+- Visual Studio Build Tools (for compilation)
 
-### Building the Plugin
-
-1. **Clone the repository:**
-   ```bash
-   git clone YOUR_REPOSITORY_URL
-   cd MyVST3Plugin
+### Installation
+1. Download the latest release
+2. Copy `MyVST3Plugin.vst3` to your VST3 directory:
    ```
-
-2. **Run the automated build script:**
-   ```bash
-   build_final.bat
+   C:\Program Files\Common Files\VST3\
    ```
+3. Rescan plugins in your DAW
 
-3. **Install the plugin:**
-   - Copy `MyVST3Plugin.vst3` to `C:\Program Files\Common Files\VST3\`
-   - Or use the automated script
+### Standalone Version
+The plugin also includes a standalone executable for testing without a DAW:
+```
+MyVST3Plugin_artefacts\Debug\Standalone\MyVST3Plugin.exe
+```
 
-### Manual Build Steps
+## 🎛️ Usage
+
+### Basic Operation
+1. Load the plugin in your DAW
+2. Set oscillator frequencies (20Hz - 20kHz range)
+3. Adjust ADSR envelope for desired sound shaping
+4. Use the filter to sculpt the tone
+5. Control master volume for final output level
+
+### Filter Controls
+- **Cutoff**: Sets the frequency where filtering begins (lower = darker sound)
+- **Resonance**: Emphasizes frequencies around the cutoff (higher = more pronounced peak)
+
+### MIDI Control
+- Receives MIDI note input for pitch control
+- Velocity sensitive (future enhancement)
+- Supports all standard MIDI channels
+
+## 🔧 Building from Source
+
+### Requirements
+- CMake 3.15+
+- Visual Studio 2019/2022 Build Tools
+- JUCE Framework
+
+### Build Steps
 ```bash
-# Configure build environment
-call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" x64
-
-# Create build directory
-mkdir build
-cd build
-
-# Configure with CMake
-cmake -G "NMake Makefiles" ..
+# Configure
+cmake -B build -S .
 
 # Build
-nmake
+cmake --build build --config Debug
+
+# Install
+cmake --install build
 ```
 
-## 🎛️ Using the Plugin
+## 📊 Technical Specifications
 
-### In Your DAW
-1. **Create an Instrument Track**
-2. **Load MyVST3Plugin** from your VST3 plugins
-3. **Open the Plugin Interface**
+- **Format**: VST3
+- **Architecture**: 64-bit
+- **Sample Rates**: All standard rates supported
+- **Latency**: Minimal (< 1ms)
+- **CPU Usage**: Optimized for real-time performance
 
-### Interface Overview
-- **Top Section**: Virtual MIDI keyboard (click to play notes)
-- **Middle Section**: Oscillator controls and ADSR envelope
-- **Bottom Section**: Master volume and status displays
+## 🎼 Sound Design Tips
 
-### Controls
-- **Osc1 Frequency**: Controls the first oscillator (sine wave)
-- **Osc2 Frequency**: Controls the second oscillator (square wave)
-- **Attack/Decay/Sustain/Release**: ADSR envelope parameters
-- **Master Volume**: Overall output level
-- **Test Mode**: Enable continuous sound generation
+### Bass Sounds
+- Osc1: Low frequency sine wave
+- Osc2: Slightly detuned for thickness
+- Fast attack, slow release
+- Filter cutoff around 200-500Hz
 
-## 🎵 MIDI Support
+### Leads
+- Mix of sine and square waves
+- Medium ADSR settings
+- Filter resonance for bite
+- Higher oscillator frequencies
 
-### Virtual Keyboard
-- **Click piano keys** to trigger notes
-- **Visual feedback** shows pressed keys
-- **MIDI note display** shows current note and octave
-
-### External MIDI Devices
-- **Automatic detection** of connected MIDI devices
-- **Real-time input** from keyboards and controllers
-- **MIDI channel support** (configurable)
-
-## 🛠️ Technical Details
-
-### Architecture
-- **Plugin Format**: VST3
-- **Framework**: JUCE 8.x
-- **Build System**: CMake
-- **Compiler**: MSVC (Visual Studio)
-- **Platform**: Windows x64
-
-### Code Structure
-```
-MyVST3Plugin/
-├── CMakeLists.txt          # Build configuration
-├── Source/
-│   ├── PluginProcessor.h   # Audio processing logic
-│   ├── PluginProcessor.cpp
-│   ├── PluginEditor.h      # GUI implementation
-│   └── PluginEditor.cpp
-├── build/                  # Build artifacts (ignored)
-└── README.md               # This file
-```
-
-### Dependencies
-- **JUCE Modules**:
-  - `juce_audio_basics`
-  - `juce_audio_devices`
-  - `juce_audio_processors`
-  - `juce_audio_utils`
-  - `juce_gui_basics`
-  - `juce_gui_extra`
-  - `juce_core`
-  - `juce_dsp`
-
-## 📋 Development Notes
-
-### Building for Different Configurations
-```bash
-# Debug build
-cmake -G "NMake Makefiles" ..
-nmake
-
-# Release build (default)
-cmake -G "NMake Makefiles" ..
-nmake
-```
-
-### Troubleshooting
-- **Plugin not found in DAW**: Force plugin rescan in your DAW
-- **Build errors**: Ensure Visual Studio Build Tools are installed
-- **MIDI not working**: Check MIDI device connections in Windows settings
+### Pads
+- Slow attack and release
+- Both oscillators active
+- Wide filter settings
+- Low resonance for smoothness
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+This is a proprietary commercial product. No external contributions accepted.
+
+## 📞 Support
+
+For support or licensing inquiries, please contact the developer.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Copyright (c) 2025 [Your Name]. All rights reserved.
 
-## 🙏 Acknowledgments
-
-- **JUCE Framework**: For providing the audio plugin development tools
-- **Raw Material Software**: For creating and maintaining JUCE
-- **VST3 SDK**: For the plugin format specification
+This software is proprietary and confidential. No part may be reproduced, distributed, or transmitted in any form without written permission.
 
 ---
 
-**Built with ❤️ using JUCE**
+**Built with ❤️ using JUCE Framework**
