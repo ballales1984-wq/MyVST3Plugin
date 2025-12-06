@@ -1,46 +1,21 @@
-PROPRIETARY SOFTWARE LICENSE AGREEMENT
+MIT License
 
-This Proprietary Software License Agreement (the "Agreement") is entered into between [Your Full Legal Name] ("Licensor") and any individual or entity ("Licensee") who downloads, installs, accesses, or uses the software product known as MyVST3Plugin (the "Software").
+Copyright (c) 2025 ballales1984-wq
 
-BY DOWNLOADING, INSTALLING, ACCESSING, OR USING THE SOFTWARE, LICENSEE AGREES TO BE BOUND BY THE TERMS AND CONDITIONS OF THIS AGREEMENT.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-1. GRANT OF LICENSE
-Licensor hereby grants Licensee a limited, non-exclusive, non-transferable, revocable license to use the Software solely for personal or commercial music production purposes, subject to the terms and conditions set forth in this Agreement.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-2. RESTRICTIONS
-Licensee shall not:
-a) Modify, adapt, translate, reverse engineer, decompile, disassemble, or create derivative works based on the Software
-b) Distribute, sell, lease, rent, sublicense, or otherwise transfer the Software to any third party
-c) Remove or alter any copyright, trademark, or other proprietary notices contained in the Software
-d) Use the Software for any illegal or unauthorized purpose
-e) Attempt to circumvent any technological protection measures in the Software
-
-3. OWNERSHIP
-The Software is proprietary to Licensor and is protected by copyright laws and international treaty provisions. Licensor retains all right, title, and interest in and to the Software, including all intellectual property rights therein.
-
-4. TERM AND TERMINATION
-This license is effective until terminated. Licensor may terminate this license at any time if Licensee breaches any provision of this Agreement. Upon termination, Licensee must immediately cease all use of the Software and destroy all copies.
-
-5. WARRANTY DISCLAIMER
-THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
-
-6. LIMITATION OF LIABILITY
-IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR RELATED TO THE USE OF THE SOFTWARE.
-
-7. GOVERNING LAW
-This Agreement shall be governed by and construed in accordance with the laws of [Your Country/State], without regard to its conflict of law principles.
-
-8. ENTIRE AGREEMENT
-This Agreement constitutes the entire agreement between the parties and supersedes all prior agreements or understandings, whether written or oral.
-
-9. CONTACT INFORMATION
-For questions about this license, please contact:
-[Your Email Address]
-
----
-
-Copyright (c) 2025 [Your Full Legal Name]. All rights reserved.
-
-MyVST3Plugin is a trademark of [Your Full Legal Name].
-
-Last updated: December 2025
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

@@ -4,7 +4,7 @@ A powerful and versatile VST3 synthesizer plugin built with JUCE framework, feat
 
 ![MyVST3Plugin](https://img.shields.io/badge/Version-1.0.0-blue)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
-![License](https://img.shields.io/badge/License-Proprietary-red)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ## 🎵 Features
 
@@ -117,17 +117,24 @@ cmake --install build
 
 ## 🤝 Contributing
 
-This is a proprietary commercial product. No external contributions accepted.
+We welcome contributions! Please feel free to submit issues, feature requests, and pull requests.
 
-## 📞 Support
+### How to Contribute
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-For support or licensing inquiries, please contact the developer.
+### Development Guidelines
+- Follow JUCE coding standards
+- Add comments for complex logic
+- Test your changes thoroughly
+- Update documentation as needed
 
 ## 📄 License
 
-Copyright (c) 2025 [Your Name]. All rights reserved.
-
-This software is proprietary and confidential. No part may be reproduced, distributed, or transmitted in any form without written permission.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
