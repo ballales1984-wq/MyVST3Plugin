@@ -19,6 +19,8 @@ const juce::String MyVST3PluginAudioProcessor::paramTestMode = "testMode";
 // Filter parameters
 const juce::String MyVST3PluginAudioProcessor::paramFilterCutoff = "filterCutoff";
 const juce::String MyVST3PluginAudioProcessor::paramFilterResonance = "filterResonance";
+const juce::String MyVST3PluginAudioProcessor::paramFilterType = "filterType";
+const juce::String MyVST3PluginAudioProcessor::paramFilterDrive = "filterDrive";
 
 // LFO parameters
 const juce::String MyVST3PluginAudioProcessor::paramLfoRate = "lfoRate";
@@ -72,6 +74,15 @@ const float MyVST3PluginAudioProcessor::filterCutoffDefault = 10000.0f;
 const float MyVST3PluginAudioProcessor::filterResonanceMin = 0.1f;
 const float MyVST3PluginAudioProcessor::filterResonanceMax = 10.0f;
 const float MyVST3PluginAudioProcessor::filterResonanceDefault = 0.707f;
+
+// Advanced filter parameter ranges
+const float MyVST3PluginAudioProcessor::filterTypeMin = 0.0f;        // 0 = LPF
+const float MyVST3PluginAudioProcessor::filterTypeMax = 3.0f;        // 3 = Notch
+const float MyVST3PluginAudioProcessor::filterTypeDefault = 0.0f;    // LPF default
+
+const float MyVST3PluginAudioProcessor::filterDriveMin = 0.0f;       // 0% drive (clean)
+const float MyVST3PluginAudioProcessor::filterDriveMax = 1.0f;       // 100% drive (max saturation)
+const float MyVST3PluginAudioProcessor::filterDriveDefault = 0.0f;   // No drive default
 
 // LFO parameter ranges
 const float MyVST3PluginAudioProcessor::lfoRateMin = 0.1f;      // 0.1 Hz (very slow)
@@ -127,6 +138,10 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
                                                                filterCutoffMin, filterCutoffMax, filterCutoffDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramFilterResonance, "Filter Resonance",
                                                                filterResonanceMin, filterResonanceMax, filterResonanceDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramFilterType, "Filter Type",
+                                                               filterTypeMin, filterTypeMax, filterTypeDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramFilterDrive, "Filter Drive",
+                                                               filterDriveMin, filterDriveMax, filterDriveDefault),
                    // LFO Parameters
                    std::make_unique<juce::AudioParameterFloat>(paramLfoRate, "LFO Rate",
                                                                lfoRateMin, lfoRateMax, lfoRateDefault),
@@ -499,11 +514,38 @@ void MyVST3PluginAudioProcessor::updateFilter()
 {
     const auto cutoff = parameters.getRawParameterValue(paramFilterCutoff);
     const auto resonance = parameters.getRawParameterValue(paramFilterResonance);
+    const auto type = parameters.getRawParameterValue(paramFilterType);
+    const auto drive = parameters.getRawParameterValue(paramFilterDrive);
 
-    // Create filter coefficients for low-pass filter
-    juce::dsp::IIR::Coefficients<float>::Ptr coefficients =
-        juce::dsp::IIR::Coefficients<float>::makeLowPass(currentSampleRate, cutoff->load(), resonance->load());
+    float cutoffValue = cutoff->load();
+    float resonanceValue = resonance->load();
+    int typeValue = static_cast<int>(type->load());
 
+    // Create filter coefficients based on type
+    juce::dsp::IIR::Coefficients<float>::Ptr coefficients;
+
+    switch (typeValue)
+    {
+        case 0: // Low-Pass Filter
+            coefficients = juce::dsp::IIR::Coefficients<float>::makeLowPass(currentSampleRate, cutoffValue, resonanceValue);
+            break;
+        case 1: // High-Pass Filter
+            coefficients = juce::dsp::IIR::Coefficients<float>::makeHighPass(currentSampleRate, cutoffValue, resonanceValue);
+            break;
+        case 2: // Band-Pass Filter
+            coefficients = juce::dsp::IIR::Coefficients<float>::makeBandPass(currentSampleRate, cutoffValue, resonanceValue);
+            break;
+        case 3: // Notch Filter
+            coefficients = juce::dsp::IIR::Coefficients<float>::makeNotch(currentSampleRate, cutoffValue, resonanceValue);
+            break;
+        default:
+            // Default to Low-Pass
+            coefficients = juce::dsp::IIR::Coefficients<float>::makeLowPass(currentSampleRate, cutoffValue, resonanceValue);
+            break;
+    }
+
+    // Apply drive/saturation if needed (for future implementation)
+    // For now, just set the coefficients
     lowPassFilter.coefficients = coefficients;
     lowPassFilterR.coefficients = coefficients;
 }

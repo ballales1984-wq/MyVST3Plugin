@@ -61,6 +61,11 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     setupSlider(filterResonanceSlider, filterResonanceLabel, filterResonanceValueLabel,
                 "Filter Resonance", 0.1f, 10.0f, 0.707f, "");
 
+    // Setup advanced filter controls
+    setupFilterTypeSelector(filterTypeSelector, filterTypeLabel, "Filter Type");
+    setupSlider(filterDriveSlider, filterDriveLabel, filterDriveValueLabel,
+                "Filter Drive", 0.0f, 1.0f, 0.0f, "");
+
     // Setup LFO controls
     setupSlider(lfoRateSlider, lfoRateLabel, lfoRateValueLabel,
                 "LFO Rate", 0.1f, 20.0f, 1.0f, " Hz");
@@ -129,6 +134,12 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
 
     filterResonanceAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramFilterResonance, filterResonanceSlider);
+
+    filterTypeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramFilterType, filterTypeSelector);
+
+    filterDriveAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramFilterDrive, filterDriveSlider);
 
     // LFO attachments
     lfoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -358,17 +369,24 @@ void MyVST3PluginAudioProcessorEditor::resized()
     releaseSlider.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 30);
     releaseValueLabel.setBounds(margin + controlWidth + margin, y + 45, controlWidth, 15);
 
-    // Row 6: Filter Cutoff (full width)
+    // Row 6: Filter Cutoff + Filter Type
     y += rowHeight;
-    filterCutoffLabel.setBounds(margin, y, area.getWidth() - margin * 2, 15);
-    filterCutoffSlider.setBounds(margin, y + 15, area.getWidth() - margin * 2, 30);
-    filterCutoffValueLabel.setBounds(margin, y + 45, area.getWidth() - margin * 2, 15);
+    filterCutoffLabel.setBounds(margin, y, controlWidth, 15);
+    filterCutoffSlider.setBounds(margin, y + 15, controlWidth, 30);
+    filterCutoffValueLabel.setBounds(margin, y + 45, controlWidth, 15);
 
-    // Row 7: Filter Resonance (full width)
+    filterTypeLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
+    filterTypeSelector.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 45);
+
+    // Row 7: Filter Resonance + Filter Drive
     y += rowHeight;
-    filterResonanceLabel.setBounds(margin, y, area.getWidth() - margin * 2, 15);
-    filterResonanceSlider.setBounds(margin, y + 15, area.getWidth() - margin * 2, 30);
-    filterResonanceValueLabel.setBounds(margin, y + 45, area.getWidth() - margin * 2, 15);
+    filterResonanceLabel.setBounds(margin, y, controlWidth, 15);
+    filterResonanceSlider.setBounds(margin, y + 15, controlWidth, 30);
+    filterResonanceValueLabel.setBounds(margin, y + 45, controlWidth, 15);
+
+    filterDriveLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
+    filterDriveSlider.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 30);
+    filterDriveValueLabel.setBounds(margin + controlWidth + margin, y + 45, controlWidth, 15);
 
     // Row 8: LFO Rate + LFO Amount
     y += rowHeight;
@@ -408,6 +426,25 @@ void MyVST3PluginAudioProcessorEditor::setupWaveformSelector(juce::ComboBox& com
     comboBox.addItem("Saw", 3);
     comboBox.addItem("Triangle", 4);
     comboBox.setSelectedItemIndex(0); // Default to Sine
+    comboBox.setColour(juce::ComboBox::backgroundColourId, juce::Colours::darkgrey);
+    comboBox.setColour(juce::ComboBox::textColourId, juce::Colours::white);
+    addAndMakeVisible(comboBox);
+}
+
+void MyVST3PluginAudioProcessorEditor::setupFilterTypeSelector(juce::ComboBox& comboBox, juce::Label& label, const juce::String& paramName)
+{
+    // Setup label
+    label.setText(paramName, juce::dontSendNotification);
+    label.setFont(juce::Font(12.0f));
+    label.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(label);
+
+    // Setup ComboBox for filter types
+    comboBox.addItem("LPF", 1);     // Low-Pass Filter
+    comboBox.addItem("HPF", 2);     // High-Pass Filter
+    comboBox.addItem("BPF", 3);     // Band-Pass Filter
+    comboBox.addItem("Notch", 4);   // Notch Filter
+    comboBox.setSelectedItemIndex(0); // Default to LPF
     comboBox.setColour(juce::ComboBox::backgroundColourId, juce::Colours::darkgrey);
     comboBox.setColour(juce::ComboBox::textColourId, juce::Colours::white);
     addAndMakeVisible(comboBox);
