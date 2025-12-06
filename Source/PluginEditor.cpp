@@ -7,7 +7,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Set window size for 5 columns with waveform controls
-    setSize (900, 750); // Increased height for better spacing and keyboard visibility
+    setSize (900, 650); // Optimized compact layout
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -332,7 +332,7 @@ void MyVST3PluginAudioProcessorEditor::resized()
 
     const int margin = 8;
     const int controlWidth = (area.getWidth() - margin * 5) / 4;  // 4 controls per row
-    const int rowHeight = 60;
+    const int rowHeight = 45; // More compact layout
 
     int y = area.getY();
 
@@ -422,23 +422,20 @@ void MyVST3PluginAudioProcessorEditor::resized()
     lfoToOsc1Button.setBounds(margin + (controlWidth + margin) * 2, y + 15, controlWidth / 2 - 2, 25);
     lfoToAmpButton.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 15, controlWidth / 2 - 2, 25);
 
-    // Third Oscillator button moved to better position (now handled in FM controls section)
+    // FM ON button next to LFO buttons (column 3)
+    osc3EnabledButton.setBounds(margin + (controlWidth + margin) * 3, y + 15, controlWidth - 10, 25);
 
-    // Third Oscillator controls (better spaced for VST compatibility)
-    // FM button takes full width in column 3
-    osc3EnabledButton.setBounds(margin + (controlWidth + margin) * 2, y + 15, controlWidth, 25);
-
-    // Move FM controls to next row with better spacing
+    // FM controls in next row (more compact)
     y += rowHeight;
-    // FM Freq in column 2 (full width for better usability)
-    osc3FrequencySlider.setBounds(margin + (controlWidth + margin) * 1, y + 40, controlWidth, 50);
-    osc3FrequencyLabel.setBounds(margin + (controlWidth + margin) * 1, y + 15, controlWidth, 25);
-    osc3FrequencyValueLabel.setBounds(margin + (controlWidth + margin) * 1, y + 90, controlWidth, 20);
+    // FM Freq - left side
+    osc3FrequencySlider.setBounds(margin, y + 25, controlWidth, 35);
+    osc3FrequencyLabel.setBounds(margin, y + 5, controlWidth, 20);
+    osc3FrequencyValueLabel.setBounds(margin, y + 60, controlWidth, 15);
 
-    // FM Mix in column 3 (full width for better usability)
-    osc3MixSlider.setBounds(margin + (controlWidth + margin) * 2, y + 40, controlWidth, 50);
-    osc3MixLabel.setBounds(margin + (controlWidth + margin) * 2, y + 15, controlWidth, 25);
-    osc3MixValueLabel.setBounds(margin + (controlWidth + margin) * 2, y + 90, controlWidth, 20);
+    // FM Mix - right side
+    osc3MixSlider.setBounds(margin + controlWidth + margin, y + 25, controlWidth, 35);
+    osc3MixLabel.setBounds(margin + controlWidth + margin, y + 5, controlWidth, 20);
+    osc3MixValueLabel.setBounds(margin + controlWidth + margin, y + 60, controlWidth, 15);
 }
 
 // Simplified single-view layout
