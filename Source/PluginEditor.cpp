@@ -7,7 +7,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Set window size for 5 columns with waveform controls
-    setSize (900, 750); // Increased height for PWM control
+    setSize (900, 900); // Height with FM modulation controls + mix slider
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -88,6 +88,17 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     lfoToAmpButton.setButtonText("AMP");
     lfoToAmpButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::orange);
     addAndMakeVisible(lfoToAmpButton);
+
+    // Setup Third Oscillator enable button (FM modulation)
+    osc3EnabledButton.setButtonText("FM ON");
+    osc3EnabledButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::purple);
+    addAndMakeVisible(osc3EnabledButton);
+
+    // Setup Third Oscillator frequency slider (FM modulation)
+    setupSlider(osc3FrequencySlider, osc3FrequencyLabel, osc3FrequencyValueLabel, "FM Freq", 20.0f, 2000.0f, 330.0f, " Hz");
+
+    // Setup Third Oscillator mix slider (FM modulation intensity)
+    setupSlider(osc3MixSlider, osc3MixLabel, osc3MixValueLabel, "FM Mix", 0.0f, 1.0f, 0.0f, "");
 
     // Setup test mode button
     testModeButton.setButtonText("TEST MODE");
@@ -172,6 +183,15 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
 
     lfoToAmpAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoToAmp, lfoToAmpButton);
+
+    osc3EnabledAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramOsc3Enabled, osc3EnabledButton);
+
+    osc3FrequencyAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramOsc3Frequency, osc3FrequencySlider);
+
+    osc3MixAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramOsc3Mix, osc3MixSlider);
 
     // Setup MIDI status labels
     midiStatusLabel.setText("MIDI Status: No note", juce::dontSendNotification);
@@ -401,6 +421,21 @@ void MyVST3PluginAudioProcessorEditor::resized()
     // LFO routing buttons (compact)
     lfoToOsc1Button.setBounds(margin + (controlWidth + margin) * 2, y + 15, controlWidth / 2 - 2, 25);
     lfoToAmpButton.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 15, controlWidth / 2 - 2, 25);
+
+    // Third Oscillator button (FM modulation)
+    y += rowHeight;
+    osc3EnabledButton.setBounds(margin + (controlWidth + margin) * 2, y + 15, controlWidth / 2 - 2, 25);
+
+    // Third Oscillator frequency control
+    osc3FrequencySlider.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 40, controlWidth / 2 - 2, 80);
+    osc3FrequencyLabel.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 15, controlWidth / 2 - 2, 25);
+    osc3FrequencyValueLabel.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 120, controlWidth / 2 - 2, 20);
+
+    // Third Oscillator mix control (next row)
+    y += rowHeight;
+    osc3MixSlider.setBounds(margin + (controlWidth + margin) * 2, y + 40, controlWidth, 80);
+    osc3MixLabel.setBounds(margin + (controlWidth + margin) * 2, y + 15, controlWidth, 25);
+    osc3MixValueLabel.setBounds(margin + (controlWidth + margin) * 2, y + 120, controlWidth, 20);
 }
 
 // Simplified single-view layout

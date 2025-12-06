@@ -77,6 +77,15 @@ private:
     juce::ToggleButton lfoToOsc1Button;
     juce::ToggleButton lfoToAmpButton;
 
+    // Third Oscillator Controls - VERSION 2 (FM Modulator)
+    juce::ToggleButton osc3EnabledButton; // Enable FM modulation
+    juce::Slider osc3FrequencySlider;
+    juce::Label osc3FrequencyLabel;
+    juce::Label osc3FrequencyValueLabel;
+    juce::Slider osc3MixSlider;
+    juce::Label osc3MixLabel;
+    juce::Label osc3MixValueLabel;
+
     // Labels
     juce::Label masterVolumeLabel;
     juce::Label osc1FrequencyLabel;
@@ -159,6 +168,9 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfoAmountAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> lfoToOsc1Attachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> lfoToAmpAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> osc3EnabledAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc3FrequencyAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc3MixAttachment;
 
     // Simplified layout - back to basics
 
