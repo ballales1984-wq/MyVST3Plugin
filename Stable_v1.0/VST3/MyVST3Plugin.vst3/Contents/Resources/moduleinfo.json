@@ -1,0 +1,50 @@
+{
+  "Name": "MyVST3Plugin",
+  "Version": "1.0.0",
+  "Factory Info": {
+    "Vendor": "ballales1984-wq",
+    "URL": "https://github.com/ballales1984-wq/MyVST3Plugin",
+    "E-Mail": "contact@yourdomain.com",
+    "Flags": {
+      "Unicode": true,
+      "Classes Discardable": false,
+      "Component Non Discardable": false,
+    },
+  },
+  "Classes": [
+    {
+      "CID": "ABCDEF019182FAEB424C38344D767374",
+      "Category": "Audio Module Class",
+      "Name": "MyVST3Plugin",
+      "Vendor": "ballales1984-wq",
+      "Version": "1.0.0",
+      "SDKVersion": "VST 3.7.12",
+      "Sub Categories": [
+        "Instrument",
+        "Instrument",
+        "Synthesizer",
+      ],
+      "Class Flags": 2,
+      "Cardinality": 2147483647,
+      "Snapshots": [
+      ],
+    },
+    {
+      "CID": "ABCDEF011234ABCD424C38344D767374",
+      "Category": "Component Controller Class",
+      "Name": "MyVST3Plugin",
+      "Vendor": "ballales1984-wq",
+      "Version": "1.0.0",
+      "SDKVersion": "VST 3.7.12",
+      "Sub Categories": [
+        "Instrument",
+        "Instrument",
+        "Synthesizer",
+      ],
+      "Class Flags": 2,
+      "Cardinality": 2147483647,
+      "Snapshots": [
+      ],
+    },
+  ],
+}
