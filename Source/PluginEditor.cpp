@@ -7,7 +7,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Set window size for 5 columns with waveform controls
-    setSize (900, 750); // Height with compacted FM modulation controls
+    setSize (900, 720); // Height optimized for keyboard visibility
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -426,16 +426,16 @@ void MyVST3PluginAudioProcessorEditor::resized()
     y += rowHeight;
     osc3EnabledButton.setBounds(margin + (controlWidth + margin) * 2, y + 15, controlWidth / 2 - 2, 25);
 
-    // Third Oscillator controls (compacted layout)
-    // FM Freq on the left
-    osc3FrequencySlider.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 40, controlWidth / 2 - 2, 60);
-    osc3FrequencyLabel.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 15, controlWidth / 2 - 2, 25);
-    osc3FrequencyValueLabel.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 100, controlWidth / 2 - 2, 20);
+    // Third Oscillator controls (more compact)
+    // FM Freq on the left (smaller height)
+    osc3FrequencySlider.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 35, controlWidth / 2 - 2, 45);
+    osc3FrequencyLabel.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 15, controlWidth / 2 - 2, 20);
+    osc3FrequencyValueLabel.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 80, controlWidth / 2 - 2, 15);
 
-    // FM Mix on the right (same row)
-    osc3MixSlider.setBounds(margin + (controlWidth + margin) * 3, y + 40, controlWidth / 2 - 2, 60);
-    osc3MixLabel.setBounds(margin + (controlWidth + margin) * 3, y + 15, controlWidth / 2 - 2, 25);
-    osc3MixValueLabel.setBounds(margin + (controlWidth + margin) * 3, y + 100, controlWidth / 2 - 2, 20);
+    // FM Mix on the right (smaller height)
+    osc3MixSlider.setBounds(margin + (controlWidth + margin) * 3, y + 35, controlWidth / 2 - 2, 45);
+    osc3MixLabel.setBounds(margin + (controlWidth + margin) * 3, y + 15, controlWidth / 2 - 2, 20);
+    osc3MixValueLabel.setBounds(margin + (controlWidth + margin) * 3, y + 80, controlWidth / 2 - 2, 15);
 }
 
 // Simplified single-view layout
