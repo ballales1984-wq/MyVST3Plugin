@@ -4,7 +4,7 @@ A powerful and versatile VST3 synthesizer plugin built with JUCE framework, feat
 
 ![MyVST3Plugin](https://img.shields.io/badge/Version-1.0.0-blue)
 ![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey)
-![License](https://img.shields.io/badge/License-MIT-green)
+![License](https://img.shields.io/badge/License-Commercial-red)
 
 ## 🎵 Features
 
@@ -115,26 +115,30 @@ cmake --install build
 - Wide filter settings
 - Low resonance for smoothness
 
-## 🤝 Contributing
+## 🔒 Commercial Product
 
-We welcome contributions! Please feel free to submit issues, feature requests, and pull requests.
+This is a commercial software product. No external contributions or modifications are accepted.
 
-### How to Contribute
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+For feature requests or support inquiries, please contact the developer directly.
 
-### Development Guidelines
-- Follow JUCE coding standards
-- Add comments for complex logic
-- Test your changes thoroughly
-- Update documentation as needed
+## 💰 Licensing & Purchase
 
-## 📄 License
+This is a commercial software product that requires a paid license to use.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### License Options
+- **Personal License**: For individual musicians and producers
+- **Commercial License**: For commercial studios and production companies
+- **Educational License**: Discounted rates for students and educational institutions
+
+### Purchase Information
+- Visit [Your Website] for pricing and purchase options
+- Demo/trial versions may be available with limited functionality
+- All sales are final - no refunds
+
+### License Terms
+- One license per user/machine
+- License keys are required for activation
+- See [LICENSE](LICENSE) file for complete terms and conditions
 
 ---
 
