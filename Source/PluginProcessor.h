@@ -88,6 +88,7 @@ public:
     static const juce::String paramMasterVolume;
     static const juce::String paramOsc1Frequency;
     static const juce::String paramOsc2Frequency;
+    static const juce::String paramOsc2Detune;  // NEW: Detune parameter for Osc2
     static const juce::String paramAttack;
     static const juce::String paramDecay;
     static const juce::String paramSustain;
@@ -103,6 +104,9 @@ public:
     static const float oscFrequencyMax;
     static const float osc1FrequencyDefault;
     static const float osc2FrequencyDefault;
+    static const float osc2DetuneMin;
+    static const float osc2DetuneMax;
+    static const float osc2DetuneDefault;
 
     static const float adsrMin;
     static const float adsrMax;

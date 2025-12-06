@@ -8,8 +8,8 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
 {
     DBG("MyVST3Plugin: Editor constructor called - starting GUI initialization");
 
-    // Set window size (increased for all controls visible)
-    setSize (800, 850); // Extra height to show Release control
+    // Set window size (increased for 4 columns + detune control)
+    setSize (1100, 850); // Wider window for 4 columns layout
 
     DBG("MyVST3Plugin: Setting window size to 800x850");
 
@@ -32,6 +32,10 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
 
     setupSlider(osc2FrequencySlider, osc2FrequencyLabel, osc2FrequencyValueLabel,
                 "Osc2 Frequency", 20.0f, 20000.0f, 220.0f, " Hz");
+
+    // Setup Osc2 detune slider (NEW)
+    setupSlider(osc2DetuneSlider, osc2DetuneLabel, osc2DetuneValueLabel,
+                "Osc2 Detune", -50.0f, 50.0f, 0.0f, " cents");
 
     // Setup ADSR sliders
     setupSlider(attackSlider, attackLabel, attackValueLabel,
@@ -63,6 +67,9 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
 
     osc2FrequencyAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramOsc2Frequency, osc2FrequencySlider);
+
+    osc2DetuneAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(  // NEW
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramOsc2Detune, osc2DetuneSlider);
 
     attackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramAttack, attackSlider);
@@ -164,12 +171,12 @@ void MyVST3PluginAudioProcessorEditor::resized()
     auto keyboardArea = area.removeFromBottom(80);
     keyboardComponent.setBounds(keyboardArea);
 
-    // Simple grid layout - 3 columns
-    const int numCols = 3;
+    // Simple grid layout - 4 columns (added detune control)
+    const int numCols = 4;
     const int controlHeight = 70;
     const int controlWidth = area.getWidth() / numCols;
 
-    // Row 1: Osc1, Osc2, Master
+    // Row 1: Osc1, Osc2, Detune, Master
     for (int col = 0; col < numCols; ++col)
     {
         auto cellArea = area.removeFromTop(controlHeight).withWidth(controlWidth).withX(col * controlWidth);
@@ -186,7 +193,12 @@ void MyVST3PluginAudioProcessorEditor::resized()
                 osc2FrequencySlider.setBounds(cellArea.removeFromTop(35));
                 osc2FrequencyValueLabel.setBounds(cellArea);
                 break;
-            case 2: // Master
+            case 2: // Osc2 Detune (NEW)
+                osc2DetuneLabel.setBounds(cellArea.removeFromTop(15));
+                osc2DetuneSlider.setBounds(cellArea.removeFromTop(35));
+                osc2DetuneValueLabel.setBounds(cellArea);
+                break;
+            case 3: // Master
                 masterVolumeLabel.setBounds(cellArea.removeFromTop(15));
                 masterVolumeSlider.setBounds(cellArea.removeFromTop(35));
                 masterVolumeValueLabel.setBounds(cellArea);
@@ -194,7 +206,7 @@ void MyVST3PluginAudioProcessorEditor::resized()
         }
     }
 
-    // Row 2: Attack, Decay, Release ← RELEASE QUI ORA!
+    // Row 2: Attack, Decay, Sustain, Release
     for (int col = 0; col < numCols; ++col)
     {
         auto cellArea = area.removeFromTop(controlHeight).withWidth(controlWidth).withX(col * controlWidth);
@@ -211,7 +223,12 @@ void MyVST3PluginAudioProcessorEditor::resized()
                 decaySlider.setBounds(cellArea.removeFromTop(35));
                 decayValueLabel.setBounds(cellArea);
                 break;
-            case 2: // Release ← ORA PIÙ VISIBILE!
+            case 2: // Sustain
+                sustainLabel.setBounds(cellArea.removeFromTop(15));
+                sustainSlider.setBounds(cellArea.removeFromTop(35));
+                sustainValueLabel.setBounds(cellArea);
+                break;
+            case 3: // Release
                 releaseLabel.setBounds(cellArea.removeFromTop(15));
                 releaseSlider.setBounds(cellArea.removeFromTop(35));
                 releaseValueLabel.setBounds(cellArea);
@@ -219,33 +236,30 @@ void MyVST3PluginAudioProcessorEditor::resized()
         }
     }
 
-    // Row 3: Sustain, Filter Cutoff, Filter Resonance
+    // Row 3: Filter Cutoff, Filter Resonance, Test Mode, [Empty]
     for (int col = 0; col < numCols; ++col)
     {
         auto cellArea = area.removeFromTop(controlHeight).withWidth(controlWidth).withX(col * controlWidth);
 
         switch (col)
         {
-            case 0: // Sustain
-                sustainLabel.setBounds(cellArea.removeFromTop(15));
-                sustainSlider.setBounds(cellArea.removeFromTop(35));
-                sustainValueLabel.setBounds(cellArea);
-                break;
-            case 1: // Filter Cutoff
+            case 0: // Filter Cutoff
                 filterCutoffLabel.setBounds(cellArea.removeFromTop(15));
                 filterCutoffSlider.setBounds(cellArea.removeFromTop(35));
                 filterCutoffValueLabel.setBounds(cellArea);
                 break;
-            case 2: // Filter Resonance
+            case 1: // Filter Resonance
                 filterResonanceLabel.setBounds(cellArea.removeFromTop(15));
                 filterResonanceSlider.setBounds(cellArea.removeFromTop(35));
                 filterResonanceValueLabel.setBounds(cellArea);
                 break;
+            case 2: // Test Mode Button (moved from bottom)
+                testModeButton.setBounds(cellArea);
+                break;
+            case 3: // Empty space for future controls
+                break;
         }
     }
-
-    // Test mode button at bottom
-    testModeButton.setBounds(area.removeFromTop(40));
 }
 
 void MyVST3PluginAudioProcessorEditor::timerCallback()
@@ -291,6 +305,7 @@ void MyVST3PluginAudioProcessorEditor::updateValueLabels()
     masterVolumeValueLabel.setText(juce::String(masterVolumeSlider.getValue(), 2), juce::dontSendNotification);
     osc1FrequencyValueLabel.setText(juce::String(osc1FrequencySlider.getValue(), 0) + " Hz", juce::dontSendNotification);
     osc2FrequencyValueLabel.setText(juce::String(osc2FrequencySlider.getValue(), 0) + " Hz", juce::dontSendNotification);
+    osc2DetuneValueLabel.setText(juce::String(osc2DetuneSlider.getValue(), 1) + " cents", juce::dontSendNotification);  // NEW
     attackValueLabel.setText(juce::String(attackSlider.getValue(), 2) + " s", juce::dontSendNotification);
     decayValueLabel.setText(juce::String(decaySlider.getValue(), 2) + " s", juce::dontSendNotification);
     sustainValueLabel.setText(juce::String(sustainSlider.getValue(), 2), juce::dontSendNotification);

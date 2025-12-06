@@ -6,6 +6,7 @@
 const juce::String MyVST3PluginAudioProcessor::paramMasterVolume = "masterVolume";
 const juce::String MyVST3PluginAudioProcessor::paramOsc1Frequency = "osc1Frequency";
 const juce::String MyVST3PluginAudioProcessor::paramOsc2Frequency = "osc2Frequency";
+const juce::String MyVST3PluginAudioProcessor::paramOsc2Detune = "osc2Detune";  // NEW: Detune parameter
 const juce::String MyVST3PluginAudioProcessor::paramAttack = "attack";
 const juce::String MyVST3PluginAudioProcessor::paramDecay = "decay";
 const juce::String MyVST3PluginAudioProcessor::paramSustain = "sustain";
@@ -25,6 +26,11 @@ const float MyVST3PluginAudioProcessor::oscFrequencyMin = 20.0f;
 const float MyVST3PluginAudioProcessor::oscFrequencyMax = 20000.0f;
 const float MyVST3PluginAudioProcessor::osc1FrequencyDefault = 440.0f;
 const float MyVST3PluginAudioProcessor::osc2FrequencyDefault = 220.0f;
+
+// Osc2 detune parameters (in cents, for chorus effect)
+const float MyVST3PluginAudioProcessor::osc2DetuneMin = -50.0f;      // -50 cents (down)
+const float MyVST3PluginAudioProcessor::osc2DetuneMax = 50.0f;       // +50 cents (up)
+const float MyVST3PluginAudioProcessor::osc2DetuneDefault = 0.0f;    // No detune by default
 
 const float MyVST3PluginAudioProcessor::adsrMin = 0.001f;
 const float MyVST3PluginAudioProcessor::adsrMax = 5.0f;
@@ -62,6 +68,8 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
                                                                oscFrequencyMin, oscFrequencyMax, osc1FrequencyDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramOsc2Frequency, "Osc2 Frequency",
                                                                oscFrequencyMin, oscFrequencyMax, osc2FrequencyDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramOsc2Detune, "Osc2 Detune",
+                                                               osc2DetuneMin, osc2DetuneMax, osc2DetuneDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramAttack, "Attack",
                                                                adsrMin, adsrMax, attackDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramDecay, "Decay",
@@ -304,18 +312,36 @@ void MyVST3PluginAudioProcessor::setStateInformation (const void* data, int size
 //==============================================================================
 void MyVST3PluginAudioProcessor::updateOscillators()
 {
+    float osc1Freq;
+
     if (noteOn && currentMidiNote >= 0)
     {
-        oscillator1.setFrequency(currentFrequency);
+        osc1Freq = currentFrequency;
+        oscillator1.setFrequency(osc1Freq);
     }
     else
     {
-        const auto osc1Freq = parameters.getRawParameterValue(paramOsc1Frequency);
-        oscillator1.setFrequency(osc1Freq->load());
+        const auto osc1FreqParam = parameters.getRawParameterValue(paramOsc1Frequency);
+        osc1Freq = osc1FreqParam->load();
+        oscillator1.setFrequency(osc1Freq);
     }
 
-    const auto osc2Freq = parameters.getRawParameterValue(paramOsc2Frequency);
-    oscillator2.setFrequency(osc2Freq->load());
+    // Get Osc2 base frequency
+    const auto osc2FreqParam = parameters.getRawParameterValue(paramOsc2Frequency);
+    float osc2Freq = osc2FreqParam->load();
+
+    // Apply detune to Osc2 based on Osc1 frequency
+    const auto detuneParam = parameters.getRawParameterValue(paramOsc2Detune);
+    float detuneCents = detuneParam->load();
+
+    // Convert cents to frequency ratio: ratio = 2^(cents/1200)
+    float detuneRatio = std::pow(2.0f, detuneCents / 1200.0f);
+
+    // Apply detune relative to Osc1 frequency (for chorus effect)
+    // This creates a natural detuning effect
+    float detunedOsc2Freq = osc1Freq * detuneRatio;
+
+    oscillator2.setFrequency(detunedOsc2Freq);
 }
 
 void MyVST3PluginAudioProcessor::updateADSR()

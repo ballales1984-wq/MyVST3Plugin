@@ -48,6 +48,7 @@ private:
     juce::Slider masterVolumeSlider;
     juce::Slider osc1FrequencySlider;
     juce::Slider osc2FrequencySlider;
+    juce::Slider osc2DetuneSlider;  // NEW: Detune slider for Osc2
     juce::Slider attackSlider;
     juce::Slider decaySlider;
     juce::Slider sustainSlider;
@@ -61,6 +62,7 @@ private:
     juce::Label masterVolumeLabel;
     juce::Label osc1FrequencyLabel;
     juce::Label osc2FrequencyLabel;
+    juce::Label osc2DetuneLabel;  // NEW: Detune label
     juce::Label attackLabel;
     juce::Label decayLabel;
     juce::Label sustainLabel;
@@ -74,6 +76,7 @@ private:
     juce::Label masterVolumeValueLabel;
     juce::Label osc1FrequencyValueLabel;
     juce::Label osc2FrequencyValueLabel;
+    juce::Label osc2DetuneValueLabel;  // NEW: Detune value label
     juce::Label attackValueLabel;
     juce::Label decayValueLabel;
     juce::Label sustainValueLabel;
@@ -100,6 +103,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> masterVolumeAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1FrequencyAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2FrequencyAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2DetuneAttachment;  // NEW: Detune attachment
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> decayAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sustainAttachment;
