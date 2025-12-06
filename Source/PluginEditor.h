@@ -41,6 +41,14 @@ private:
     // GUI Components
     juce::Label titleLabel;
 
+    // Main tabbed interface
+    juce::TabbedComponent mainTabs { juce::TabbedButtonBar::TabsAtTop };
+
+    // Tab components
+    std::unique_ptr<juce::Component> oscillatorsTab;
+    std::unique_ptr<juce::Component> envelopeTab;
+    std::unique_ptr<juce::Component> modulationTab;
+
     // Keyboard Component
     juce::MidiKeyboardComponent keyboardComponent;
 
@@ -143,6 +151,12 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfoAmountAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> lfoToOsc1Attachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> lfoToAmpAttachment;
+
+    //==============================================================================
+    // Tab creation methods
+    void createOscillatorsTab();
+    void createEnvelopeTab();
+    void createModulationTab();
 
     //==============================================================================
     // Helper methods
