@@ -9,7 +9,8 @@ A powerful and versatile VST3 synthesizer plugin built with JUCE framework, feat
 ## 🎵 Features
 
 ### Core Synthesis
-- **Dual Oscillators**: Independent sine and square wave oscillators
+- **Dual Oscillators**: Independent waveform selection (Sine/Square/Saw/Triangle)
+- **Oscillator Detune**: -50 to +50 cents for chorus effects
 - **ADSR Envelope**: Full Attack, Decay, Sustain, Release envelope control
 - **Master Volume**: Precise output level control
 
@@ -69,10 +70,21 @@ For optimal performance in Reaper:
 
 ### Basic Operation
 1. Load the plugin in your DAW
-2. Set oscillator frequencies (20Hz - 20kHz range)
-3. Adjust ADSR envelope for desired sound shaping
-4. Use the filter to sculpt the tone
-5. Control master volume for final output level
+2. Choose waveforms for Osc1 and Osc2 (Sine/Square/Saw/Triangle)
+3. Set oscillator frequencies (20Hz - 20kHz range)
+4. Apply detune to Osc2 (-50/+50 cents) for chorus effects
+5. Adjust ADSR envelope for desired sound shaping
+6. Use the filter to sculpt the tone
+7. Control master volume for final output level
+
+### Oscillator Controls
+- **Waveform Selection**: Choose from 4 waveforms per oscillator
+  - **Sine**: Pure, smooth tones
+  - **Square**: Bright, hollow sound
+  - **Saw**: Rich, cutting harmonics
+  - **Triangle**: Soft, flute-like tones
+- **Frequency**: 20Hz - 20kHz range
+- **Detune**: -50 to +50 cents for chorus effects
 
 ### Filter Controls
 - **Cutoff**: Sets the frequency where filtering begins (lower = darker sound)
@@ -113,22 +125,29 @@ cmake --install build
 ## 🎼 Sound Design Tips
 
 ### Bass Sounds
-- Osc1: Low frequency sine wave
-- Osc2: Slightly detuned for thickness
+- Osc1: Saw wave (rich harmonics)
+- Osc2: Square wave + 7 cents detune
 - Fast attack, slow release
 - Filter cutoff around 200-500Hz
 
 ### Leads
-- Mix of sine and square waves
+- Osc1: Square wave (bright)
+- Osc2: Triangle wave + 12 cents detune
 - Medium ADSR settings
 - Filter resonance for bite
-- Higher oscillator frequencies
 
 ### Pads
+- Osc1: Sine wave (smooth)
+- Osc2: Saw wave + 5 cents detune
 - Slow attack and release
-- Both oscillators active
 - Wide filter settings
 - Low resonance for smoothness
+
+### Sound Design Examples
+- **Classic Synth**: Square + Square waves
+- **Warm Pad**: Sine + Triangle waves
+- **Cutting Lead**: Saw + Square waves
+- **Detuned Bass**: Saw + Saw with 10 cents detune
 
 ## 🔒 Commercial Product
 

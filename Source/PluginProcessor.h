@@ -89,6 +89,8 @@ public:
     static const juce::String paramOsc1Frequency;
     static const juce::String paramOsc2Frequency;
     static const juce::String paramOsc2Detune;  // NEW: Detune parameter for Osc2
+    static const juce::String paramOsc1Waveform;  // NEW: Waveform selection for Osc1
+    static const juce::String paramOsc2Waveform;  // NEW: Waveform selection for Osc2
     static const juce::String paramAttack;
     static const juce::String paramDecay;
     static const juce::String paramSustain;
@@ -107,6 +109,14 @@ public:
     static const float osc2DetuneMin;
     static const float osc2DetuneMax;
     static const float osc2DetuneDefault;
+
+    // Waveform parameters
+    static const float osc1WaveformMin;
+    static const float osc1WaveformMax;
+    static const float osc1WaveformDefault;
+    static const float osc2WaveformMin;
+    static const float osc2WaveformMax;
+    static const float osc2WaveformDefault;
 
     static const float adsrMin;
     static const float adsrMax;
@@ -151,6 +161,7 @@ private:
     void updateOscillators();
     void updateADSR();
     void updateFilter();
+    void updateOscillatorWaveform(juce::dsp::Oscillator<float>& oscillator, int waveformType);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyVST3PluginAudioProcessor)
 };

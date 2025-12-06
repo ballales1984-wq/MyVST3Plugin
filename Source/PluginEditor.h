@@ -54,6 +54,10 @@ private:
     juce::Slider sustainSlider;
     juce::Slider releaseSlider;
 
+    // Waveform selectors (ComboBox)
+    juce::ComboBox osc1WaveformSelector;  // NEW: Waveform selector for Osc1
+    juce::ComboBox osc2WaveformSelector;  // NEW: Waveform selector for Osc2
+
     // Filter sliders
     juce::Slider filterCutoffSlider;
     juce::Slider filterResonanceSlider;
@@ -63,6 +67,8 @@ private:
     juce::Label osc1FrequencyLabel;
     juce::Label osc2FrequencyLabel;
     juce::Label osc2DetuneLabel;  // NEW: Detune label
+    juce::Label osc1WaveformLabel;  // NEW: Waveform label for Osc1
+    juce::Label osc2WaveformLabel;  // NEW: Waveform label for Osc2
     juce::Label attackLabel;
     juce::Label decayLabel;
     juce::Label sustainLabel;
@@ -104,6 +110,8 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1FrequencyAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2FrequencyAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2DetuneAttachment;  // NEW: Detune attachment
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc1WaveformAttachment;  // NEW: Waveform attachment for Osc1
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc2WaveformAttachment;  // NEW: Waveform attachment for Osc2
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> decayAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sustainAttachment;
@@ -114,6 +122,7 @@ private:
 
     //==============================================================================
     // Helper methods
+    void setupWaveformSelector(juce::ComboBox& comboBox, juce::Label& label, const juce::String& paramName);
     void setupSlider(juce::Slider& slider, juce::Label& label, juce::Label& valueLabel,
                     const juce::String& paramName, float minValue, float maxValue,
                     float defaultValue, const juce::String& unit = "");

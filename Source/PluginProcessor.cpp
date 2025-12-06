@@ -7,6 +7,8 @@ const juce::String MyVST3PluginAudioProcessor::paramMasterVolume = "masterVolume
 const juce::String MyVST3PluginAudioProcessor::paramOsc1Frequency = "osc1Frequency";
 const juce::String MyVST3PluginAudioProcessor::paramOsc2Frequency = "osc2Frequency";
 const juce::String MyVST3PluginAudioProcessor::paramOsc2Detune = "osc2Detune";  // NEW: Detune parameter
+const juce::String MyVST3PluginAudioProcessor::paramOsc1Waveform = "osc1Waveform";  // NEW: Waveform for Osc1
+const juce::String MyVST3PluginAudioProcessor::paramOsc2Waveform = "osc2Waveform";  // NEW: Waveform for Osc2
 const juce::String MyVST3PluginAudioProcessor::paramAttack = "attack";
 const juce::String MyVST3PluginAudioProcessor::paramDecay = "decay";
 const juce::String MyVST3PluginAudioProcessor::paramSustain = "sustain";
@@ -31,6 +33,15 @@ const float MyVST3PluginAudioProcessor::osc2FrequencyDefault = 220.0f;
 const float MyVST3PluginAudioProcessor::osc2DetuneMin = -50.0f;      // -50 cents (down)
 const float MyVST3PluginAudioProcessor::osc2DetuneMax = 50.0f;       // +50 cents (up)
 const float MyVST3PluginAudioProcessor::osc2DetuneDefault = 0.0f;    // No detune by default
+
+// Waveform parameters (0=sine, 1=square, 2=saw, 3=triangle)
+const float MyVST3PluginAudioProcessor::osc1WaveformMin = 0.0f;
+const float MyVST3PluginAudioProcessor::osc1WaveformMax = 3.0f;
+const float MyVST3PluginAudioProcessor::osc1WaveformDefault = 0.0f;  // Sine wave default
+
+const float MyVST3PluginAudioProcessor::osc2WaveformMin = 0.0f;
+const float MyVST3PluginAudioProcessor::osc2WaveformMax = 3.0f;
+const float MyVST3PluginAudioProcessor::osc2WaveformDefault = 1.0f;  // Square wave default
 
 const float MyVST3PluginAudioProcessor::adsrMin = 0.001f;
 const float MyVST3PluginAudioProcessor::adsrMax = 5.0f;
@@ -70,6 +81,10 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
                                                                oscFrequencyMin, oscFrequencyMax, osc2FrequencyDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramOsc2Detune, "Osc2 Detune",
                                                                osc2DetuneMin, osc2DetuneMax, osc2DetuneDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramOsc1Waveform, "Osc1 Waveform",
+                                                               osc1WaveformMin, osc1WaveformMax, osc1WaveformDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramOsc2Waveform, "Osc2 Waveform",
+                                                               osc2WaveformMin, osc2WaveformMax, osc2WaveformDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramAttack, "Attack",
                                                                adsrMin, adsrMax, attackDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramDecay, "Decay",
@@ -89,7 +104,7 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
     midiCollector()
 #endif
 {
-    DBG("MyVST3Plugin: PLUGIN CONSTRUCTOR CALLED - Plugin loaded successfully!");
+    // Plugin initialized successfully
 }
 
 MyVST3PluginAudioProcessor::~MyVST3PluginAudioProcessor()
@@ -169,12 +184,12 @@ void MyVST3PluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
 
     oscillator1.prepare(spec);
-    oscillator1.initialise([](float x) { return std::sin(x); }, 128);
-
     oscillator2.prepare(spec);
-    oscillator2.initialise([](float x) { return x > 0.0f ? 1.0f : -1.0f; }, 128);
 
     adsr.setSampleRate(sampleRate);
+
+    // Initialize oscillators with default waveforms
+    updateOscillators();
 
     // Initialize filters
     lowPassFilter.prepare(spec);
@@ -326,6 +341,11 @@ void MyVST3PluginAudioProcessor::updateOscillators()
         oscillator1.setFrequency(osc1Freq);
     }
 
+    // Update Osc1 waveform
+    const auto osc1WaveformParam = parameters.getRawParameterValue(paramOsc1Waveform);
+    int osc1Waveform = static_cast<int>(osc1WaveformParam->load());
+    updateOscillatorWaveform(oscillator1, osc1Waveform);
+
     // Get Osc2 base frequency
     const auto osc2FreqParam = parameters.getRawParameterValue(paramOsc2Frequency);
     float osc2Freq = osc2FreqParam->load();
@@ -342,6 +362,11 @@ void MyVST3PluginAudioProcessor::updateOscillators()
     float detunedOsc2Freq = osc1Freq * detuneRatio;
 
     oscillator2.setFrequency(detunedOsc2Freq);
+
+    // Update Osc2 waveform
+    const auto osc2WaveformParam = parameters.getRawParameterValue(paramOsc2Waveform);
+    int osc2Waveform = static_cast<int>(osc2WaveformParam->load());
+    updateOscillatorWaveform(oscillator2, osc2Waveform);
 }
 
 void MyVST3PluginAudioProcessor::updateADSR()
@@ -359,6 +384,34 @@ void MyVST3PluginAudioProcessor::updateADSR()
 
     adsr.setParameters(adsrParams);
 }
+
+void MyVST3PluginAudioProcessor::updateOscillatorWaveform(juce::dsp::Oscillator<float>& oscillator, int waveformType)
+{
+    switch (waveformType)
+    {
+        case 0: // Sine wave
+            oscillator.initialise([](float x) { return std::sin(x); }, 128);
+            break;
+        case 1: // Square wave
+            oscillator.initialise([](float x) { return x > 0.0f ? 1.0f : -1.0f; }, 128);
+            break;
+        case 2: // Saw wave
+            oscillator.initialise([](float x) { return x / juce::MathConstants<float>::pi; }, 128);
+            break;
+        case 3: // Triangle wave
+            oscillator.initialise([](float x) {
+                float normalized = x / juce::MathConstants<float>::twoPi;
+                float phase = normalized - std::floor(normalized);
+                return phase < 0.5f ? (4.0f * phase - 1.0f) : (3.0f - 4.0f * phase);
+            }, 128);
+            break;
+        default:
+            // Default to sine wave
+            oscillator.initialise([](float x) { return std::sin(x); }, 128);
+            break;
+    }
+}
+
 
 void MyVST3PluginAudioProcessor::updateFilter()
 {

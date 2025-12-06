@@ -6,12 +6,8 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     : AudioProcessorEditor (&p), audioProcessor (p),
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
-    DBG("MyVST3Plugin: Editor constructor called - starting GUI initialization");
-
-    // Set window size (increased for 4 columns + detune control)
-    setSize (1100, 850); // Wider window for 4 columns layout
-
-    DBG("MyVST3Plugin: Setting window size to 800x850");
+    // Set window size for 5 columns with waveform controls
+    setSize (1400, 850); // Wider window for waveform controls
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -36,6 +32,10 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     // Setup Osc2 detune slider (NEW)
     setupSlider(osc2DetuneSlider, osc2DetuneLabel, osc2DetuneValueLabel,
                 "Osc2 Detune", -50.0f, 50.0f, 0.0f, " cents");
+
+    // Setup waveform selectors (NEW)
+    setupWaveformSelector(osc1WaveformSelector, osc1WaveformLabel, "Osc1 Waveform");
+    setupWaveformSelector(osc2WaveformSelector, osc2WaveformLabel, "Osc2 Waveform");
 
     // Setup ADSR sliders
     setupSlider(attackSlider, attackLabel, attackValueLabel,
@@ -71,6 +71,12 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     osc2DetuneAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(  // NEW
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramOsc2Detune, osc2DetuneSlider);
 
+    osc1WaveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(  // NEW
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramOsc1Waveform, osc1WaveformSelector);
+
+    osc2WaveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(  // NEW
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramOsc2Waveform, osc2WaveformSelector);
+
     attackAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramAttack, attackSlider);
 
@@ -88,11 +94,6 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
 
     filterResonanceAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramFilterResonance, filterResonanceSlider);
-
-    // Debug logs for filter controls
-    DBG("FILTER CONTROLS INITIALIZED:");
-    DBG("  Filter Cutoff Slider: " << filterCutoffSlider.getValue());
-    DBG("  Filter Resonance Slider: " << filterResonanceSlider.getValue());
 
     // Setup MIDI status labels
     midiStatusLabel.setText("MIDI Status: No note", juce::dontSendNotification);
@@ -136,8 +137,6 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
 
     // Start timer for updating value labels
     startTimer(50); // Update every 50ms for better MIDI responsiveness
-
-    DBG("MyVST3Plugin: Editor constructor completed successfully - GUI ready");
 }
 
 MyVST3PluginAudioProcessorEditor::~MyVST3PluginAudioProcessorEditor()
@@ -148,16 +147,12 @@ MyVST3PluginAudioProcessorEditor::~MyVST3PluginAudioProcessorEditor()
 //==============================================================================
 void MyVST3PluginAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    DBG("MyVST3Plugin: Paint method called - drawing GUI");
-
     // Fill background
     g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
 
     // Draw border
     g.setColour (juce::Colours::grey);
     g.drawRect (getLocalBounds(), 1);
-
-    DBG("MyVST3Plugin: Paint method completed");
 }
 
 void MyVST3PluginAudioProcessorEditor::resized()
@@ -171,12 +166,12 @@ void MyVST3PluginAudioProcessorEditor::resized()
     auto keyboardArea = area.removeFromBottom(80);
     keyboardComponent.setBounds(keyboardArea);
 
-    // Simple grid layout - 4 columns (added detune control)
-    const int numCols = 4;
+    // Waveform selection grid layout - 5 columns
+    const int numCols = 5;
     const int controlHeight = 70;
     const int controlWidth = area.getWidth() / numCols;
 
-    // Row 1: Osc1, Osc2, Detune, Master
+    // Row 1: Osc1, Osc2, Detune, Master, [Empty]
     for (int col = 0; col < numCols; ++col)
     {
         auto cellArea = area.removeFromTop(controlHeight).withWidth(controlWidth).withX(col * controlWidth);
@@ -203,10 +198,12 @@ void MyVST3PluginAudioProcessorEditor::resized()
                 masterVolumeSlider.setBounds(cellArea.removeFromTop(35));
                 masterVolumeValueLabel.setBounds(cellArea);
                 break;
+            case 4: // Empty space
+                break;
         }
     }
 
-    // Row 2: Attack, Decay, Sustain, Release
+    // Row 2: ADSR Controls
     for (int col = 0; col < numCols; ++col)
     {
         auto cellArea = area.removeFromTop(controlHeight).withWidth(controlWidth).withX(col * controlWidth);
@@ -236,30 +233,45 @@ void MyVST3PluginAudioProcessorEditor::resized()
         }
     }
 
-    // Row 3: Filter Cutoff, Filter Resonance, Test Mode, [Empty]
+    // Row 2: ADSR Controls
     for (int col = 0; col < numCols; ++col)
     {
         auto cellArea = area.removeFromTop(controlHeight).withWidth(controlWidth).withX(col * controlWidth);
 
         switch (col)
         {
-            case 0: // Filter Cutoff
-                filterCutoffLabel.setBounds(cellArea.removeFromTop(15));
-                filterCutoffSlider.setBounds(cellArea.removeFromTop(35));
-                filterCutoffValueLabel.setBounds(cellArea);
+            case 0: // Attack
+                attackLabel.setBounds(cellArea.removeFromTop(15));
+                attackSlider.setBounds(cellArea.removeFromTop(35));
+                attackValueLabel.setBounds(cellArea);
                 break;
-            case 1: // Filter Resonance
-                filterResonanceLabel.setBounds(cellArea.removeFromTop(15));
-                filterResonanceSlider.setBounds(cellArea.removeFromTop(35));
-                filterResonanceValueLabel.setBounds(cellArea);
+            case 1: // Decay
+                decayLabel.setBounds(cellArea.removeFromTop(15));
+                decaySlider.setBounds(cellArea.removeFromTop(35));
+                decayValueLabel.setBounds(cellArea);
                 break;
-            case 2: // Test Mode Button (moved from bottom)
-                testModeButton.setBounds(cellArea);
+            case 2: // Sustain
+                sustainLabel.setBounds(cellArea.removeFromTop(15));
+                sustainSlider.setBounds(cellArea.removeFromTop(35));
+                sustainValueLabel.setBounds(cellArea);
                 break;
-            case 3: // Empty space for future controls
+            case 3: // Release
+                releaseLabel.setBounds(cellArea.removeFromTop(15));
+                releaseSlider.setBounds(cellArea.removeFromTop(35));
+                releaseValueLabel.setBounds(cellArea);
                 break;
         }
     }
+
+    // Row 3: Filter Controls
+    auto filterArea = area.removeFromTop(controlHeight);
+    filterCutoffLabel.setBounds(filterArea.removeFromLeft(200));
+    filterCutoffSlider.setBounds(filterArea.removeFromLeft(150));
+    filterCutoffValueLabel.setBounds(filterArea.removeFromLeft(100));
+    filterResonanceLabel.setBounds(filterArea.removeFromLeft(200));
+    filterResonanceSlider.setBounds(filterArea.removeFromLeft(150));
+    filterResonanceValueLabel.setBounds(filterArea.removeFromLeft(100));
+    testModeButton.setBounds(filterArea);
 }
 
 void MyVST3PluginAudioProcessorEditor::timerCallback()
@@ -269,6 +281,25 @@ void MyVST3PluginAudioProcessorEditor::timerCallback()
 
 //==============================================================================
 // Helper methods
+void MyVST3PluginAudioProcessorEditor::setupWaveformSelector(juce::ComboBox& comboBox, juce::Label& label, const juce::String& paramName)
+{
+    // Setup label
+    label.setText(paramName, juce::dontSendNotification);
+    label.setFont(juce::Font(12.0f));
+    label.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(label);
+
+    // Setup ComboBox
+    comboBox.addItem("Sine", 1);
+    comboBox.addItem("Square", 2);
+    comboBox.addItem("Saw", 3);
+    comboBox.addItem("Triangle", 4);
+    comboBox.setSelectedItemIndex(0); // Default to Sine
+    comboBox.setColour(juce::ComboBox::backgroundColourId, juce::Colours::darkgrey);
+    comboBox.setColour(juce::ComboBox::textColourId, juce::Colours::white);
+    addAndMakeVisible(comboBox);
+}
+
 void MyVST3PluginAudioProcessorEditor::setupSlider(juce::Slider& slider, juce::Label& label,
                                                   juce::Label& valueLabel, const juce::String& paramName,
                                                   float minValue, float maxValue, float defaultValue,
