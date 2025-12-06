@@ -1,9 +1,32 @@
-build/ 
-build_*/ 
-*.lib 
-*.exp 
-*.pdb 
-*.obj 
-CMakeCache.txt 
-CMakeFiles/ 
-.vs/ 
+# Build directories and files
+build/
+build_*/
+Stable_v1.0/
+MyVST3Plugin_artefacts/
+CMakeCache.txt
+CMakeFiles/
+.vs/
+
+# Binary files
+*.exe
+*.dll
+*.lib
+*.exp
+*.pdb
+*.obj
+*.ilk
+*.vst3
+
+# Temporary files
+temp_*.bat
+*temp*
+*.tmp
+*.bak
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
