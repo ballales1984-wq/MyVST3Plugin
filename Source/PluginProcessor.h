@@ -56,6 +56,13 @@ public:
     static const juce::String paramFilterCutoff;
     static const juce::String paramFilterResonance;
 
+    //==============================================================================
+    // LFO parameters (simplified version)
+    static const juce::String paramLfoRate;
+    static const juce::String paramLfoAmount;
+    static const juce::String paramLfoToOsc1;
+    static const juce::String paramLfoToAmp;
+
     static const float filterCutoffMin;
     static const float filterCutoffMax;
     static const float filterCutoffDefault;
@@ -63,6 +70,14 @@ public:
     static const float filterResonanceMin;
     static const float filterResonanceMax;
     static const float filterResonanceDefault;
+
+    static const float lfoRateMin;      // 0.1 Hz
+    static const float lfoRateMax;      // 20.0 Hz
+    static const float lfoRateDefault;  // 1.0 Hz
+
+    static const float lfoAmountMin;      // 0.0
+    static const float lfoAmountMax;      // 1.0
+    static const float lfoAmountDefault;  // 0.0 (no modulation)
 
     //==============================================================================
     const juce::String getName() const override;
@@ -146,6 +161,9 @@ private:
     juce::dsp::Oscillator<float> oscillator1; // Sine wave
     juce::dsp::Oscillator<float> oscillator2; // Square wave
 
+    // LFO for modulation (simplified)
+    juce::dsp::Oscillator<float> lfoOscillator;
+
     // ADSR envelope
     juce::ADSR adsr;
 
@@ -162,6 +180,10 @@ private:
     void updateADSR();
     void updateFilter();
     void updateOscillatorWaveform(juce::dsp::Oscillator<float>& oscillator, int waveformType);
+
+    // LFO helper methods (simplified)
+    void updateLFO();
+    float getLFOValue();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyVST3PluginAudioProcessor)
 };

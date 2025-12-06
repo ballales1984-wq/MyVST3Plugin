@@ -57,6 +57,31 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     setupSlider(filterResonanceSlider, filterResonanceLabel, filterResonanceValueLabel,
                 "Filter Resonance", 0.1f, 10.0f, 0.707f, "");
 
+    // Setup LFO controls (simplified)
+    setupSlider(lfoRateSlider, lfoRateLabel, lfoRateValueLabel,
+                "LFO Rate", 0.1f, 20.0f, 1.0f, " Hz");
+
+    setupSlider(lfoAmountSlider, lfoAmountLabel, lfoAmountValueLabel,
+                "LFO Amount", 0.0f, 1.0f, 0.0f, "");
+
+    // Setup LFO routing buttons
+    lfoRoutingLabel.setText("LFO Routing", juce::dontSendNotification);
+    lfoRoutingLabel.setFont(juce::Font(12.0f));
+    lfoRoutingLabel.setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(lfoRoutingLabel);
+
+    lfoToOsc1Button.setButtonText("OSC1");
+    lfoToOsc1Button.setColour(juce::ToggleButton::tickColourId, juce::Colours::orange);
+    addAndMakeVisible(lfoToOsc1Button);
+
+    lfoToAmpButton.setButtonText("AMP");
+    lfoToAmpButton.setColour(juce::ToggleButton::tickColourId, juce::Colours::orange);
+    addAndMakeVisible(lfoToAmpButton);
+
+    // Setup test mode button
+    testModeButton.setButtonText("TEST MODE");
+    testModeButton.setColour(juce::ToggleButton::textColourId, juce::Colours::green);
+    addAndMakeVisible(testModeButton);
 
     // Create parameter attachments
     masterVolumeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
@@ -95,6 +120,22 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
 
     filterResonanceAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramFilterResonance, filterResonanceSlider);
+
+    testModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramTestMode, testModeButton);
+
+    // LFO Attachments (simplified)
+    lfoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoRate, lfoRateSlider);
+
+    lfoAmountAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoAmount, lfoAmountSlider);
+
+    lfoToOsc1Attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoToOsc1, lfoToOsc1Button);
+
+    lfoToAmpAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoToAmp, lfoToAmpButton);
 
     // Setup MIDI status labels
     midiStatusLabel.setText("MIDI Status: No note", juce::dontSendNotification);
@@ -174,7 +215,8 @@ void MyVST3PluginAudioProcessorEditor::resized()
     const int numCols = 4;
     const int oscSectionHeight = 85;    // Oscillator controls (freq + waveform) - slightly reduced
     const int adsrSectionHeight = 70;   // ADSR envelope
-    const int filterSectionHeight = 80; // Filter section - slightly increased
+    const int filterSectionHeight = 70; // Filter section
+    const int lfoSectionHeight = 75;    // LFO section
     const int controlWidth = area.getWidth() / numCols;
 
     // =======================================================================
@@ -278,6 +320,38 @@ void MyVST3PluginAudioProcessorEditor::resized()
                 break;
         }
     }
+
+    // =======================================================================
+    // LFO SECTION (Simplified)
+    // =======================================================================
+
+    // LFO Main Controls (Rate and Amount)
+    for (int col = 0; col < numCols; ++col)
+    {
+        auto lfoArea = area.removeFromTop(lfoSectionHeight).withWidth(controlWidth).withX(col * controlWidth);
+
+        switch (col)
+        {
+            case 0: // LFO Rate
+                lfoRateLabel.setBounds(lfoArea.removeFromTop(15));
+                lfoRateSlider.setBounds(lfoArea.removeFromTop(35));
+                lfoRateValueLabel.setBounds(lfoArea);
+                break;
+            case 1: // LFO Amount
+                lfoAmountLabel.setBounds(lfoArea.removeFromTop(15));
+                lfoAmountSlider.setBounds(lfoArea.removeFromTop(35));
+                lfoAmountValueLabel.setBounds(lfoArea);
+                break;
+            case 2: // LFO Routing Section
+                lfoRoutingLabel.setBounds(lfoArea.removeFromTop(15));
+                // Arrange routing buttons vertically within this cell
+                lfoToOsc1Button.setBounds(lfoArea.removeFromTop(20));
+                lfoToAmpButton.setBounds(lfoArea.removeFromTop(20));
+                break;
+            case 3: // Empty space for future LFO controls
+                break;
+        }
+    }
 }
 
 void MyVST3PluginAudioProcessorEditor::timerCallback()
@@ -350,6 +424,9 @@ void MyVST3PluginAudioProcessorEditor::updateValueLabels()
     filterCutoffValueLabel.setText(juce::String(filterCutoffSlider.getValue(), 0) + " Hz", juce::dontSendNotification);
     filterResonanceValueLabel.setText(juce::String(filterResonanceSlider.getValue(), 2), juce::dontSendNotification);
 
+    // Update LFO value labels (simplified)
+    lfoRateValueLabel.setText(juce::String(lfoRateSlider.getValue(), 1) + " Hz", juce::dontSendNotification);
+    lfoAmountValueLabel.setText(juce::String((int)(lfoAmountSlider.getValue() * 100)) + "%", juce::dontSendNotification);
 
     // Update MIDI status with debug info
     if (audioProcessor.noteOn && audioProcessor.currentMidiNote >= 0)

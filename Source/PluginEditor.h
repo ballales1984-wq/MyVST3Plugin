@@ -62,6 +62,12 @@ private:
     juce::Slider filterCutoffSlider;
     juce::Slider filterResonanceSlider;
 
+    // LFO Controls (simplified)
+    juce::Slider lfoRateSlider;
+    juce::Slider lfoAmountSlider;
+    juce::ToggleButton lfoToOsc1Button;
+    juce::ToggleButton lfoToAmpButton;
+
     // Labels
     juce::Label masterVolumeLabel;
     juce::Label osc1FrequencyLabel;
@@ -78,6 +84,11 @@ private:
     juce::Label filterCutoffLabel;
     juce::Label filterResonanceLabel;
 
+    // LFO Labels (simplified)
+    juce::Label lfoRateLabel;
+    juce::Label lfoAmountLabel;
+    juce::Label lfoRoutingLabel; // Label for routing section
+
     // Value labels (for displaying current values)
     juce::Label masterVolumeValueLabel;
     juce::Label osc1FrequencyValueLabel;
@@ -87,6 +98,10 @@ private:
     juce::Label decayValueLabel;
     juce::Label sustainValueLabel;
     juce::Label releaseValueLabel;
+
+    // LFO Value Labels (simplified)
+    juce::Label lfoRateValueLabel;
+    juce::Label lfoAmountValueLabel;
 
     // Filter value labels
     juce::Label filterCutoffValueLabel;
@@ -119,6 +134,12 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterCutoffAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterResonanceAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> testModeAttachment;
+
+    // LFO Attachments (simplified)
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfoRateAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> lfoAmountAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> lfoToOsc1Attachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> lfoToAmpAttachment;
 
     //==============================================================================
     // Helper methods

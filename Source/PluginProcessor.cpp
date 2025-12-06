@@ -19,6 +19,12 @@ const juce::String MyVST3PluginAudioProcessor::paramTestMode = "testMode";
 const juce::String MyVST3PluginAudioProcessor::paramFilterCutoff = "filterCutoff";
 const juce::String MyVST3PluginAudioProcessor::paramFilterResonance = "filterResonance";
 
+// LFO parameters (simplified)
+const juce::String MyVST3PluginAudioProcessor::paramLfoRate = "lfoRate";
+const juce::String MyVST3PluginAudioProcessor::paramLfoAmount = "lfoAmount";
+const juce::String MyVST3PluginAudioProcessor::paramLfoToOsc1 = "lfoToOsc1";
+const juce::String MyVST3PluginAudioProcessor::paramLfoToAmp = "lfoToAmp";
+
 // Parameter ranges
 const float MyVST3PluginAudioProcessor::masterVolumeMin = 0.0f;
 const float MyVST3PluginAudioProcessor::masterVolumeMax = 1.0f;
@@ -60,6 +66,15 @@ const float MyVST3PluginAudioProcessor::filterResonanceMin = 0.1f;
 const float MyVST3PluginAudioProcessor::filterResonanceMax = 10.0f;
 const float MyVST3PluginAudioProcessor::filterResonanceDefault = 0.707f;
 
+// LFO parameter ranges (simplified)
+const float MyVST3PluginAudioProcessor::lfoRateMin = 0.1f;      // 0.1 Hz (very slow)
+const float MyVST3PluginAudioProcessor::lfoRateMax = 20.0f;     // 20.0 Hz (fast)
+const float MyVST3PluginAudioProcessor::lfoRateDefault = 1.0f;  // 1.0 Hz default
+
+const float MyVST3PluginAudioProcessor::lfoAmountMin = 0.0f;      // 0% modulation
+const float MyVST3PluginAudioProcessor::lfoAmountMax = 1.0f;     // 100% modulation
+const float MyVST3PluginAudioProcessor::lfoAmountDefault = 0.0f; // No modulation default
+
 //==============================================================================
 MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -98,7 +113,14 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
                    std::make_unique<juce::AudioParameterFloat>(paramFilterCutoff, "Filter Cutoff",
                                                                filterCutoffMin, filterCutoffMax, filterCutoffDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramFilterResonance, "Filter Resonance",
-                                                               filterResonanceMin, filterResonanceMax, filterResonanceDefault)
+                                                               filterResonanceMin, filterResonanceMax, filterResonanceDefault),
+                   // LFO Parameters (simplified)
+                   std::make_unique<juce::AudioParameterFloat>(paramLfoRate, "LFO Rate",
+                                                               lfoRateMin, lfoRateMax, lfoRateDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramLfoAmount, "LFO Amount",
+                                                               lfoAmountMin, lfoAmountMax, lfoAmountDefault),
+                   std::make_unique<juce::AudioParameterBool>(paramLfoToOsc1, "LFO to Osc1", false),
+                   std::make_unique<juce::AudioParameterBool>(paramLfoToAmp, "LFO to Amp", false)
                }),
     keyboardState(),
     midiCollector()
@@ -254,6 +276,32 @@ void MyVST3PluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     {
         const auto masterVolume = parameters.getRawParameterValue(paramMasterVolume);
 
+        // LFO modulation (simplified)
+        updateLFO();
+        float lfoValue = getLFOValue();
+        float lfoAmount = parameters.getRawParameterValue(paramLfoAmount)->load();
+
+        // Apply LFO to Osc1 frequency if enabled
+        bool lfoToOsc1 = parameters.getRawParameterValue(paramLfoToOsc1)->load() > 0.5f;
+        if (lfoToOsc1)
+        {
+            float baseFreq = parameters.getRawParameterValue(paramOsc1Frequency)->load();
+            float modulatedFreq = baseFreq * (1.0f + lfoValue * lfoAmount * 0.1f); // ±10% modulation
+            oscillator1.setFrequency(modulatedFreq);
+        }
+        else
+        {
+            // Normal frequency update
+            updateOscillators();
+        }
+
+        // Update Osc2 (with detune but no LFO for now)
+        float baseOsc2Freq = parameters.getRawParameterValue(paramOsc2Frequency)->load();
+        const auto detuneParam = parameters.getRawParameterValue(paramOsc2Detune);
+        float detuneCents = detuneParam->load();
+        float detuneRatio = std::pow(2.0f, detuneCents / 1200.0f);
+        oscillator2.setFrequency(baseOsc2Freq * detuneRatio);
+
         for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
         {
             float* channelData = buffer.getWritePointer(channel);
@@ -267,7 +315,16 @@ void MyVST3PluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                 // Note: ADSR doesn't have getCurrentLevel() in JUCE
                 currentEnvelopeLevel = envelopeValue;
 
-                float finalSample = (osc1Sample + osc2Sample) * envelopeValue * masterVolume->load();
+                // Apply amplitude modulation if enabled
+                bool lfoToAmp = parameters.getRawParameterValue(paramLfoToAmp)->load() > 0.5f;
+                float ampModulation = 1.0f;
+                if (lfoToAmp)
+                {
+                    // LFO value (-1 to 1) -> modulation (0.5 to 1.5)
+                    ampModulation = 1.0f + (lfoValue * lfoAmount * 0.5f);
+                }
+
+                float finalSample = (osc1Sample + osc2Sample) * envelopeValue * masterVolume->load() * ampModulation;
                 finalSample = juce::jlimit(-0.9f, 0.9f, finalSample);
 
                 // Apply filter
@@ -448,6 +505,26 @@ void MyVST3PluginAudioProcessor::handleMidiMessage(const juce::MidiMessage& mess
             adsr.noteOff();
         }
     }
+}
+
+//==============================================================================
+// LFO Methods (Simplified)
+//==============================================================================
+
+void MyVST3PluginAudioProcessor::updateLFO()
+{
+    // Update LFO rate
+    const auto lfoRateParam = parameters.getRawParameterValue(paramLfoRate);
+    float lfoRate = lfoRateParam->load();
+    lfoOscillator.setFrequency(lfoRate);
+
+    // LFO uses sine wave (simplified)
+    lfoOscillator.initialise([](float x) { return std::sin(x); }, 128);
+}
+
+float MyVST3PluginAudioProcessor::getLFOValue()
+{
+    return lfoOscillator.processSample(0.0f); // Mono LFO
 }
 
 //==============================================================================
