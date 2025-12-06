@@ -226,97 +226,112 @@ void MyVST3PluginAudioProcessorEditor::resized()
     mainTabs.setBounds(area);
 
     // =======================================================================
-    // LAYOUT CONTROLLI NEI TAB
+    // LAYOUT CONTROLLI NEI TAB - Simplified Grid Layout
     // =======================================================================
 
     const int tabWidth = area.getWidth();
-    const int controlWidth = tabWidth / 4;
-    const int controlHeight = 70;
+    const int tabHeight = area.getHeight();
+    const int margin = 10;
+    const int controlWidth = (tabWidth - margin * 5) / 4;  // 4 controls per row with margins
+    const int rowHeight = 80;
+    const int labelHeight = 15;
+    const int sliderHeight = 35;
+    const int valueHeight = 15;
 
     // Layout for Oscillators Tab
     if (oscillatorsTab)
     {
-        auto oscArea = oscillatorsTab->getLocalBounds().reduced(10);
+        int y = margin;
 
-        // OSC1 controls - top row
-        osc1FrequencyLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        osc1FrequencySlider.setBounds(oscArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        osc1FrequencyValueLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        osc1WaveformLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        osc1WaveformSelector.setBounds(oscArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
+        // Row 1: OSC1 Frequency + OSC1 Waveform
+        osc1FrequencyLabel.setBounds(margin, y, controlWidth, labelHeight);
+        osc1FrequencySlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
+        osc1FrequencyValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
 
-        // OSC2 controls - second row
-        osc2FrequencyLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        osc2FrequencySlider.setBounds(oscArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        osc2FrequencyValueLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        osc2WaveformLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        osc2WaveformSelector.setBounds(oscArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
+        osc1WaveformLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
+        osc1WaveformSelector.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight + valueHeight);
 
-        // Detune and Master - bottom row
-        osc2DetuneLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        osc2DetuneSlider.setBounds(oscArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        osc2DetuneValueLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        masterVolumeLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        masterVolumeSlider.setBounds(oscArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        masterVolumeValueLabel.setBounds(oscArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
+        // Row 2: OSC2 Frequency + OSC2 Waveform
+        y += rowHeight;
+        osc2FrequencyLabel.setBounds(margin, y, controlWidth, labelHeight);
+        osc2FrequencySlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
+        osc2FrequencyValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
+
+        osc2WaveformLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
+        osc2WaveformSelector.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight + valueHeight);
+
+        // Row 3: Detune + Master Volume
+        y += rowHeight;
+        osc2DetuneLabel.setBounds(margin, y, controlWidth, labelHeight);
+        osc2DetuneSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
+        osc2DetuneValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
+
+        masterVolumeLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
+        masterVolumeSlider.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight);
+        masterVolumeValueLabel.setBounds(margin + controlWidth + margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
     }
 
     // Layout for Envelope Tab
     if (envelopeTab)
     {
-        auto envArea = envelopeTab->getLocalBounds().reduced(10);
+        int y = margin;
 
-        // ADSR controls
-        attackLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        attackSlider.setBounds(envArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        attackValueLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
+        // Row 1: Attack + Decay
+        attackLabel.setBounds(margin, y, controlWidth, labelHeight);
+        attackSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
+        attackValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
 
-        decayLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        decaySlider.setBounds(envArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        decayValueLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
+        decayLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
+        decaySlider.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight);
+        decayValueLabel.setBounds(margin + controlWidth + margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
 
-        sustainLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        sustainSlider.setBounds(envArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        sustainValueLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
+        // Row 2: Sustain + Release
+        y += rowHeight;
+        sustainLabel.setBounds(margin, y, controlWidth, labelHeight);
+        sustainSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
+        sustainValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
 
-        releaseLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        releaseSlider.setBounds(envArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        releaseValueLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
+        releaseLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
+        releaseSlider.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight);
+        releaseValueLabel.setBounds(margin + controlWidth + margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
 
-        // Filter controls
-        filterCutoffLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth * 2).reduced(5));
-        filterCutoffSlider.setBounds(envArea.removeFromTop(35).removeFromLeft(controlWidth * 2).reduced(5));
-        filterCutoffValueLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth * 2).reduced(5));
+        // Row 3: Filter Cutoff + Resonance (full width)
+        y += rowHeight;
+        filterCutoffLabel.setBounds(margin, y, controlWidth * 2, labelHeight);
+        filterCutoffSlider.setBounds(margin, y + labelHeight, controlWidth * 2, sliderHeight);
+        filterCutoffValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth * 2, valueHeight);
 
-        filterResonanceLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth * 2).reduced(5));
-        filterResonanceSlider.setBounds(envArea.removeFromTop(35).removeFromLeft(controlWidth * 2).reduced(5));
-        filterResonanceValueLabel.setBounds(envArea.removeFromTop(15).removeFromLeft(controlWidth * 2).reduced(5));
+        filterResonanceLabel.setBounds(margin + (controlWidth * 2) + margin, y, controlWidth * 2 - margin, labelHeight);
+        filterResonanceSlider.setBounds(margin + (controlWidth * 2) + margin, y + labelHeight, controlWidth * 2 - margin, sliderHeight);
+        filterResonanceValueLabel.setBounds(margin + (controlWidth * 2) + margin, y + labelHeight + sliderHeight, controlWidth * 2 - margin, valueHeight);
     }
 
     // Layout for Modulation Tab
     if (modulationTab)
     {
-        auto modArea = modulationTab->getLocalBounds().reduced(10);
+        int y = margin;
 
-        // LFO controls
-        lfoRateLabel.setBounds(modArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        lfoRateSlider.setBounds(modArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        lfoRateValueLabel.setBounds(modArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
+        // Row 1: LFO Rate + LFO Waveform
+        lfoRateLabel.setBounds(margin, y, controlWidth, labelHeight);
+        lfoRateSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
+        lfoRateValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
 
-        lfoWaveformLabel.setBounds(modArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        lfoWaveformSelector.setBounds(modArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
+        lfoWaveformLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
+        lfoWaveformSelector.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight + valueHeight);
 
-        lfoAmountLabel.setBounds(modArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        lfoAmountSlider.setBounds(modArea.removeFromTop(35).removeFromLeft(controlWidth).reduced(5));
-        lfoAmountValueLabel.setBounds(modArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
+        // Row 2: LFO Amount + Routing
+        y += rowHeight;
+        lfoAmountLabel.setBounds(margin, y, controlWidth, labelHeight);
+        lfoAmountSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
+        lfoAmountValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
 
-        // LFO routing
-        lfoRoutingLabel.setBounds(modArea.removeFromTop(15).removeFromLeft(controlWidth).reduced(5));
-        lfoToOsc1Button.setBounds(modArea.removeFromTop(20).removeFromLeft(controlWidth).reduced(5));
-        lfoToAmpButton.setBounds(modArea.removeFromTop(20).removeFromLeft(controlWidth).reduced(5));
+        // LFO Routing section
+        lfoRoutingLabel.setBounds(margin + controlWidth + margin, y, controlWidth * 2, labelHeight);
+        lfoToOsc1Button.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, 25);
+        lfoToAmpButton.setBounds(margin + controlWidth + margin + controlWidth + margin, y + labelHeight, controlWidth - margin, 25);
 
-        // Test mode
-        testModeButton.setBounds(modArea.removeFromTop(25).reduced(5));
+        // Test Mode button
+        testModeButton.setBounds(margin, y + rowHeight - 10, controlWidth * 4, 30);
     }
 }
 
