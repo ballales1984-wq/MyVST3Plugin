@@ -7,7 +7,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Set window size for 5 columns with waveform controls
-    setSize (1000, 700); // Optimized for tabbed interface
+    setSize (900, 600); // Simplified single-view layout
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -169,21 +169,56 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     envelopeStatusLabel.setColour(juce::Label::textColourId, juce::Colours::orange);
     addAndMakeVisible(envelopeStatusLabel);
 
-    // Create tabbed interface
-    addAndMakeVisible(mainTabs);
-    mainTabs.setTabBarDepth(30);
-    mainTabs.setOutline(1);
+    // Add all controls directly to main editor (simplified approach)
+    addAndMakeVisible(osc1FrequencyLabel);
+    addAndMakeVisible(osc1FrequencySlider);
+    addAndMakeVisible(osc1FrequencyValueLabel);
+    addAndMakeVisible(osc1WaveformLabel);
+    addAndMakeVisible(osc1WaveformSelector);
 
-    // Create tab components
-    createOscillatorsTab();
-    createEnvelopeTab();
-    createModulationTab();
+    addAndMakeVisible(osc2FrequencyLabel);
+    addAndMakeVisible(osc2FrequencySlider);
+    addAndMakeVisible(osc2FrequencyValueLabel);
+    addAndMakeVisible(osc2WaveformLabel);
+    addAndMakeVisible(osc2WaveformSelector);
 
-    // Setup test mode button (now in modulation tab)
+    addAndMakeVisible(osc2DetuneLabel);
+    addAndMakeVisible(osc2DetuneSlider);
+    addAndMakeVisible(osc2DetuneValueLabel);
+
+    addAndMakeVisible(masterVolumeLabel);
+    addAndMakeVisible(masterVolumeSlider);
+    addAndMakeVisible(masterVolumeValueLabel);
+
+    addAndMakeVisible(attackLabel);
+    addAndMakeVisible(attackSlider);
+    addAndMakeVisible(attackValueLabel);
+
+    addAndMakeVisible(decayLabel);
+    addAndMakeVisible(decaySlider);
+    addAndMakeVisible(decayValueLabel);
+
+    addAndMakeVisible(sustainLabel);
+    addAndMakeVisible(sustainSlider);
+    addAndMakeVisible(sustainValueLabel);
+
+    addAndMakeVisible(releaseLabel);
+    addAndMakeVisible(releaseSlider);
+    addAndMakeVisible(releaseValueLabel);
+
+    addAndMakeVisible(filterCutoffLabel);
+    addAndMakeVisible(filterCutoffSlider);
+    addAndMakeVisible(filterCutoffValueLabel);
+
+    addAndMakeVisible(filterResonanceLabel);
+    addAndMakeVisible(filterResonanceSlider);
+    addAndMakeVisible(filterResonanceValueLabel);
+
+    // Setup test mode button
     testModeButton.setButtonText("🎵 TEST MODE 🎵");
     testModeButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
     testModeButton.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
-    // Test mode button will be added to modulation tab
+    addAndMakeVisible(testModeButton);
 
     testModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramTestMode, testModeButton);
@@ -213,219 +248,89 @@ void MyVST3PluginAudioProcessorEditor::paint (juce::Graphics& g)
 
 void MyVST3PluginAudioProcessorEditor::resized()
 {
-    auto area = getLocalBounds().reduced(5);
+    auto area = getLocalBounds().reduced(10);
 
     // Title at the top
     titleLabel.setBounds(area.removeFromTop(25));
+
+    // Test Mode button below title
+    testModeButton.setBounds(area.removeFromTop(30));
 
     // Keyboard component at the bottom
     auto keyboardArea = area.removeFromBottom(80);
     keyboardComponent.setBounds(keyboardArea);
 
-    // Main tabs take up the remaining space
-    mainTabs.setBounds(area);
-
     // =======================================================================
-    // LAYOUT CONTROLLI NEI TAB - Simplified Grid Layout
+    // SIMPLIFIED SINGLE-VIEW LAYOUT
     // =======================================================================
 
-    const int tabWidth = area.getWidth();
-    const int tabHeight = area.getHeight();
-    const int margin = 10;
-    const int controlWidth = (tabWidth - margin * 5) / 4;  // 4 controls per row with margins
-    const int rowHeight = 80;
-    const int labelHeight = 15;
-    const int sliderHeight = 35;
-    const int valueHeight = 15;
+    const int margin = 8;
+    const int controlWidth = (area.getWidth() - margin * 5) / 4;  // 4 controls per row
+    const int rowHeight = 70;
 
-    // Layout for Oscillators Tab
-    if (oscillatorsTab)
-    {
-        int y = margin;
+    int y = area.getY();
 
-        // Row 1: OSC1 Frequency + OSC1 Waveform
-        osc1FrequencyLabel.setBounds(margin, y, controlWidth, labelHeight);
-        osc1FrequencySlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
-        osc1FrequencyValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
+    // Row 1: OSC1 Frequency + OSC1 Waveform
+    osc1FrequencyLabel.setBounds(margin, y, controlWidth, 15);
+    osc1FrequencySlider.setBounds(margin, y + 15, controlWidth, 30);
+    osc1FrequencyValueLabel.setBounds(margin, y + 45, controlWidth, 15);
 
-        osc1WaveformLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
-        osc1WaveformSelector.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight + valueHeight);
+    osc1WaveformLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
+    osc1WaveformSelector.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 45);
 
-        // Row 2: OSC2 Frequency + OSC2 Waveform
-        y += rowHeight;
-        osc2FrequencyLabel.setBounds(margin, y, controlWidth, labelHeight);
-        osc2FrequencySlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
-        osc2FrequencyValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
+    // Row 2: OSC2 Frequency + OSC2 Waveform
+    y += rowHeight;
+    osc2FrequencyLabel.setBounds(margin, y, controlWidth, 15);
+    osc2FrequencySlider.setBounds(margin, y + 15, controlWidth, 30);
+    osc2FrequencyValueLabel.setBounds(margin, y + 45, controlWidth, 15);
 
-        osc2WaveformLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
-        osc2WaveformSelector.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight + valueHeight);
+    osc2WaveformLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
+    osc2WaveformSelector.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 45);
 
-        // Row 3: Detune + Master Volume
-        y += rowHeight;
-        osc2DetuneLabel.setBounds(margin, y, controlWidth, labelHeight);
-        osc2DetuneSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
-        osc2DetuneValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
+    // Row 3: Detune + Master Volume
+    y += rowHeight;
+    osc2DetuneLabel.setBounds(margin, y, controlWidth, 15);
+    osc2DetuneSlider.setBounds(margin, y + 15, controlWidth, 30);
+    osc2DetuneValueLabel.setBounds(margin, y + 45, controlWidth, 15);
 
-        masterVolumeLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
-        masterVolumeSlider.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight);
-        masterVolumeValueLabel.setBounds(margin + controlWidth + margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
-    }
+    masterVolumeLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
+    masterVolumeSlider.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 30);
+    masterVolumeValueLabel.setBounds(margin + controlWidth + margin, y + 45, controlWidth, 15);
 
-    // Layout for Envelope Tab
-    if (envelopeTab)
-    {
-        int y = margin;
+    // Row 4: ADSR - Attack + Decay
+    y += rowHeight;
+    attackLabel.setBounds(margin, y, controlWidth, 15);
+    attackSlider.setBounds(margin, y + 15, controlWidth, 30);
+    attackValueLabel.setBounds(margin, y + 45, controlWidth, 15);
 
-        // Row 1: Attack + Decay
-        attackLabel.setBounds(margin, y, controlWidth, labelHeight);
-        attackSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
-        attackValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
+    decayLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
+    decaySlider.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 30);
+    decayValueLabel.setBounds(margin + controlWidth + margin, y + 45, controlWidth, 15);
 
-        decayLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
-        decaySlider.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight);
-        decayValueLabel.setBounds(margin + controlWidth + margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
+    // Row 5: ADSR - Sustain + Release
+    y += rowHeight;
+    sustainLabel.setBounds(margin, y, controlWidth, 15);
+    sustainSlider.setBounds(margin, y + 15, controlWidth, 30);
+    sustainValueLabel.setBounds(margin, y + 45, controlWidth, 15);
 
-        // Row 2: Sustain + Release
-        y += rowHeight;
-        sustainLabel.setBounds(margin, y, controlWidth, labelHeight);
-        sustainSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
-        sustainValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
+    releaseLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
+    releaseSlider.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 30);
+    releaseValueLabel.setBounds(margin + controlWidth + margin, y + 45, controlWidth, 15);
 
-        releaseLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
-        releaseSlider.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight);
-        releaseValueLabel.setBounds(margin + controlWidth + margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
+    // Row 6: Filter Cutoff (full width)
+    y += rowHeight;
+    filterCutoffLabel.setBounds(margin, y, area.getWidth() - margin * 2, 15);
+    filterCutoffSlider.setBounds(margin, y + 15, area.getWidth() - margin * 2, 30);
+    filterCutoffValueLabel.setBounds(margin, y + 45, area.getWidth() - margin * 2, 15);
 
-        // Row 3: Filter Cutoff + Resonance (full width)
-        y += rowHeight;
-        filterCutoffLabel.setBounds(margin, y, controlWidth * 2, labelHeight);
-        filterCutoffSlider.setBounds(margin, y + labelHeight, controlWidth * 2, sliderHeight);
-        filterCutoffValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth * 2, valueHeight);
-
-        filterResonanceLabel.setBounds(margin + (controlWidth * 2) + margin, y, controlWidth * 2 - margin, labelHeight);
-        filterResonanceSlider.setBounds(margin + (controlWidth * 2) + margin, y + labelHeight, controlWidth * 2 - margin, sliderHeight);
-        filterResonanceValueLabel.setBounds(margin + (controlWidth * 2) + margin, y + labelHeight + sliderHeight, controlWidth * 2 - margin, valueHeight);
-    }
-
-    // Layout for Modulation Tab
-    if (modulationTab)
-    {
-        int y = margin;
-
-        // Row 1: LFO Rate + LFO Waveform
-        lfoRateLabel.setBounds(margin, y, controlWidth, labelHeight);
-        lfoRateSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
-        lfoRateValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
-
-        lfoWaveformLabel.setBounds(margin + controlWidth + margin, y, controlWidth, labelHeight);
-        lfoWaveformSelector.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, sliderHeight + valueHeight);
-
-        // Row 2: LFO Amount + Routing
-        y += rowHeight;
-        lfoAmountLabel.setBounds(margin, y, controlWidth, labelHeight);
-        lfoAmountSlider.setBounds(margin, y + labelHeight, controlWidth, sliderHeight);
-        lfoAmountValueLabel.setBounds(margin, y + labelHeight + sliderHeight, controlWidth, valueHeight);
-
-        // LFO Routing section
-        lfoRoutingLabel.setBounds(margin + controlWidth + margin, y, controlWidth * 2, labelHeight);
-        lfoToOsc1Button.setBounds(margin + controlWidth + margin, y + labelHeight, controlWidth, 25);
-        lfoToAmpButton.setBounds(margin + controlWidth + margin + controlWidth + margin, y + labelHeight, controlWidth - margin, 25);
-
-        // Test Mode button
-        testModeButton.setBounds(margin, y + rowHeight - 10, controlWidth * 4, 30);
-    }
+    // Row 7: Filter Resonance (full width)
+    y += rowHeight;
+    filterResonanceLabel.setBounds(margin, y, area.getWidth() - margin * 2, 15);
+    filterResonanceSlider.setBounds(margin, y + 15, area.getWidth() - margin * 2, 30);
+    filterResonanceValueLabel.setBounds(margin, y + 45, area.getWidth() - margin * 2, 15);
 }
 
-//==============================================================================
-// Tab creation methods
-//==============================================================================
-
-void MyVST3PluginAudioProcessorEditor::createOscillatorsTab()
-{
-    oscillatorsTab = std::make_unique<juce::Component>();
-    oscillatorsTab->setName("Oscillators");
-
-    // Add controls to oscillators tab
-    oscillatorsTab->addAndMakeVisible(osc1FrequencyLabel);
-    oscillatorsTab->addAndMakeVisible(osc1FrequencySlider);
-    oscillatorsTab->addAndMakeVisible(osc1FrequencyValueLabel);
-    oscillatorsTab->addAndMakeVisible(osc1WaveformLabel);
-    oscillatorsTab->addAndMakeVisible(osc1WaveformSelector);
-
-    oscillatorsTab->addAndMakeVisible(osc2FrequencyLabel);
-    oscillatorsTab->addAndMakeVisible(osc2FrequencySlider);
-    oscillatorsTab->addAndMakeVisible(osc2FrequencyValueLabel);
-    oscillatorsTab->addAndMakeVisible(osc2WaveformLabel);
-    oscillatorsTab->addAndMakeVisible(osc2WaveformSelector);
-
-    oscillatorsTab->addAndMakeVisible(osc2DetuneLabel);
-    oscillatorsTab->addAndMakeVisible(osc2DetuneSlider);
-    oscillatorsTab->addAndMakeVisible(osc2DetuneValueLabel);
-
-    oscillatorsTab->addAndMakeVisible(masterVolumeLabel);
-    oscillatorsTab->addAndMakeVisible(masterVolumeSlider);
-    oscillatorsTab->addAndMakeVisible(masterVolumeValueLabel);
-
-    mainTabs.addTab("🎛️ Oscillators", juce::Colours::darkgrey, oscillatorsTab.get(), false);
-}
-
-void MyVST3PluginAudioProcessorEditor::createEnvelopeTab()
-{
-    envelopeTab = std::make_unique<juce::Component>();
-    envelopeTab->setName("Envelope");
-
-    // Add controls to envelope tab
-    envelopeTab->addAndMakeVisible(attackLabel);
-    envelopeTab->addAndMakeVisible(attackSlider);
-    envelopeTab->addAndMakeVisible(attackValueLabel);
-
-    envelopeTab->addAndMakeVisible(decayLabel);
-    envelopeTab->addAndMakeVisible(decaySlider);
-    envelopeTab->addAndMakeVisible(decayValueLabel);
-
-    envelopeTab->addAndMakeVisible(sustainLabel);
-    envelopeTab->addAndMakeVisible(sustainSlider);
-    envelopeTab->addAndMakeVisible(sustainValueLabel);
-
-    envelopeTab->addAndMakeVisible(releaseLabel);
-    envelopeTab->addAndMakeVisible(releaseSlider);
-    envelopeTab->addAndMakeVisible(releaseValueLabel);
-
-    envelopeTab->addAndMakeVisible(filterCutoffLabel);
-    envelopeTab->addAndMakeVisible(filterCutoffSlider);
-    envelopeTab->addAndMakeVisible(filterCutoffValueLabel);
-
-    envelopeTab->addAndMakeVisible(filterResonanceLabel);
-    envelopeTab->addAndMakeVisible(filterResonanceSlider);
-    envelopeTab->addAndMakeVisible(filterResonanceValueLabel);
-
-    mainTabs.addTab("🎚️ Envelope & Filter", juce::Colours::darkgrey, envelopeTab.get(), false);
-}
-
-void MyVST3PluginAudioProcessorEditor::createModulationTab()
-{
-    modulationTab = std::make_unique<juce::Component>();
-    modulationTab->setName("Modulation");
-
-    // Add controls to modulation tab
-    modulationTab->addAndMakeVisible(lfoRateLabel);
-    modulationTab->addAndMakeVisible(lfoRateSlider);
-    modulationTab->addAndMakeVisible(lfoRateValueLabel);
-
-    modulationTab->addAndMakeVisible(lfoWaveformLabel);
-    modulationTab->addAndMakeVisible(lfoWaveformSelector);
-
-    modulationTab->addAndMakeVisible(lfoAmountLabel);
-    modulationTab->addAndMakeVisible(lfoAmountSlider);
-    modulationTab->addAndMakeVisible(lfoAmountValueLabel);
-
-    modulationTab->addAndMakeVisible(lfoRoutingLabel);
-    modulationTab->addAndMakeVisible(lfoToOsc1Button);
-    modulationTab->addAndMakeVisible(lfoToAmpButton);
-
-    modulationTab->addAndMakeVisible(testModeButton);
-
-    mainTabs.addTab("⚡ Modulation", juce::Colours::darkgrey, modulationTab.get(), false);
-}
+// Simplified single-view layout
 
 void MyVST3PluginAudioProcessorEditor::timerCallback()
 {
