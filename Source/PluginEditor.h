@@ -67,6 +67,8 @@ private:
     // Filter sliders
     juce::Slider filterCutoffSlider;
     juce::Slider filterResonanceSlider;
+    juce::ComboBox filterTypeSelector;    // NEW: Filter type selector
+    juce::Slider filterDriveSlider;       // NEW: Filter drive slider
 
     // LFO Controls
     juce::Slider lfoRateSlider;
@@ -91,6 +93,8 @@ private:
     // Filter labels
     juce::Label filterCutoffLabel;
     juce::Label filterResonanceLabel;
+    juce::Label filterTypeLabel;         // NEW: Filter type label
+    juce::Label filterDriveLabel;        // NEW: Filter drive label
 
     // LFO Labels
     juce::Label lfoRateLabel;
@@ -116,6 +120,7 @@ private:
     // Filter value labels
     juce::Label filterCutoffValueLabel;
     juce::Label filterResonanceValueLabel;
+    juce::Label filterDriveValueLabel;   // NEW: Filter drive value label
 
     // MIDI status display
     juce::Label midiStatusLabel;
@@ -144,6 +149,8 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> releaseAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterCutoffAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterResonanceAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> filterTypeAttachment;    // NEW: Filter type attachment
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterDriveAttachment;     // NEW: Filter drive attachment
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> testModeAttachment;
 
     // LFO Attachments
@@ -158,6 +165,7 @@ private:
     //==============================================================================
     // Helper methods
     void setupWaveformSelector(juce::ComboBox& comboBox, juce::Label& label, const juce::String& paramName);
+    void setupFilterTypeSelector(juce::ComboBox& comboBox, juce::Label& label, const juce::String& paramName);
     void setupSlider(juce::Slider& slider, juce::Label& label, juce::Label& valueLabel,
                     const juce::String& paramName, float minValue, float maxValue,
                     float defaultValue, const juce::String& unit = "");

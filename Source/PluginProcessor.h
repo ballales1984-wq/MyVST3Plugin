@@ -55,6 +55,8 @@ public:
     // Filter parameters
     static const juce::String paramFilterCutoff;
     static const juce::String paramFilterResonance;
+    static const juce::String paramFilterType;
+    static const juce::String paramFilterDrive;
 
     //==============================================================================
     // LFO parameters (simplified version)
@@ -71,6 +73,15 @@ public:
     static const float filterResonanceMin;
     static const float filterResonanceMax;
     static const float filterResonanceDefault;
+
+    // Advanced filter parameters
+    static const float filterTypeMin;
+    static const float filterTypeMax;
+    static const float filterTypeDefault;
+
+    static const float filterDriveMin;
+    static const float filterDriveMax;
+    static const float filterDriveDefault;
 
     static const float lfoRateMin;      // 0.1 Hz
     static const float lfoRateMax;      // 20.0 Hz
