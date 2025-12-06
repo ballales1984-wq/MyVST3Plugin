@@ -19,8 +19,9 @@ const juce::String MyVST3PluginAudioProcessor::paramTestMode = "testMode";
 const juce::String MyVST3PluginAudioProcessor::paramFilterCutoff = "filterCutoff";
 const juce::String MyVST3PluginAudioProcessor::paramFilterResonance = "filterResonance";
 
-// LFO parameters (simplified)
+// LFO parameters
 const juce::String MyVST3PluginAudioProcessor::paramLfoRate = "lfoRate";
+const juce::String MyVST3PluginAudioProcessor::paramLfoWaveform = "lfoWaveform";
 const juce::String MyVST3PluginAudioProcessor::paramLfoAmount = "lfoAmount";
 const juce::String MyVST3PluginAudioProcessor::paramLfoToOsc1 = "lfoToOsc1";
 const juce::String MyVST3PluginAudioProcessor::paramLfoToAmp = "lfoToAmp";
@@ -66,10 +67,14 @@ const float MyVST3PluginAudioProcessor::filterResonanceMin = 0.1f;
 const float MyVST3PluginAudioProcessor::filterResonanceMax = 10.0f;
 const float MyVST3PluginAudioProcessor::filterResonanceDefault = 0.707f;
 
-// LFO parameter ranges (simplified)
+// LFO parameter ranges
 const float MyVST3PluginAudioProcessor::lfoRateMin = 0.1f;      // 0.1 Hz (very slow)
 const float MyVST3PluginAudioProcessor::lfoRateMax = 20.0f;     // 20.0 Hz (fast)
 const float MyVST3PluginAudioProcessor::lfoRateDefault = 1.0f;  // 1.0 Hz default
+
+const int MyVST3PluginAudioProcessor::lfoWaveformMin = 0;      // 0 = Sine
+const int MyVST3PluginAudioProcessor::lfoWaveformMax = 3;      // 3 = Saw
+const int MyVST3PluginAudioProcessor::lfoWaveformDefault = 0;  // Sine default
 
 const float MyVST3PluginAudioProcessor::lfoAmountMin = 0.0f;      // 0% modulation
 const float MyVST3PluginAudioProcessor::lfoAmountMax = 1.0f;     // 100% modulation
@@ -114,9 +119,12 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
                                                                filterCutoffMin, filterCutoffMax, filterCutoffDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramFilterResonance, "Filter Resonance",
                                                                filterResonanceMin, filterResonanceMax, filterResonanceDefault),
-                   // LFO Parameters (simplified)
+                   // LFO Parameters
                    std::make_unique<juce::AudioParameterFloat>(paramLfoRate, "LFO Rate",
                                                                lfoRateMin, lfoRateMax, lfoRateDefault),
+                   std::make_unique<juce::AudioParameterChoice>(paramLfoWaveform, "LFO Waveform",
+                                                               juce::StringArray("Sine", "Triangle", "Square", "Saw"),
+                                                               lfoWaveformDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramLfoAmount, "LFO Amount",
                                                                lfoAmountMin, lfoAmountMax, lfoAmountDefault),
                    std::make_unique<juce::AudioParameterBool>(paramLfoToOsc1, "LFO to Osc1", false),
@@ -518,8 +526,37 @@ void MyVST3PluginAudioProcessor::updateLFO()
     float lfoRate = lfoRateParam->load();
     lfoOscillator.setFrequency(lfoRate);
 
-    // LFO uses sine wave (simplified)
-    lfoOscillator.initialise([](float x) { return std::sin(x); }, 128);
+    // Update LFO waveform
+    lfoWaveform = static_cast<int>(parameters.getRawParameterValue(paramLfoWaveform)->load());
+    setLFOWaveform(lfoWaveform);
+}
+
+void MyVST3PluginAudioProcessor::setLFOWaveform(int waveformType)
+{
+    switch (waveformType)
+    {
+        case 0: // Sine
+            lfoOscillator.initialise([](float x) { return std::sin(x); }, 128);
+            break;
+        case 1: // Triangle
+            lfoOscillator.initialise([](float x) {
+                return std::asin(std::sin(x)) * (2.0f / juce::MathConstants<float>::pi);
+            }, 128);
+            break;
+        case 2: // Square
+            lfoOscillator.initialise([](float x) {
+                return x > 0.0f ? 1.0f : -1.0f;
+            }, 128);
+            break;
+        case 3: // Saw
+            lfoOscillator.initialise([](float x) {
+                return x / juce::MathConstants<float>::pi;
+            }, 128);
+            break;
+        default: // Default to Sine
+            lfoOscillator.initialise([](float x) { return std::sin(x); }, 128);
+            break;
+    }
 }
 
 float MyVST3PluginAudioProcessor::getLFOValue()

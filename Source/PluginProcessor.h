@@ -59,6 +59,7 @@ public:
     //==============================================================================
     // LFO parameters (simplified version)
     static const juce::String paramLfoRate;
+    static const juce::String paramLfoWaveform;
     static const juce::String paramLfoAmount;
     static const juce::String paramLfoToOsc1;
     static const juce::String paramLfoToAmp;
@@ -74,6 +75,10 @@ public:
     static const float lfoRateMin;      // 0.1 Hz
     static const float lfoRateMax;      // 20.0 Hz
     static const float lfoRateDefault;  // 1.0 Hz
+
+    static const int lfoWaveformMin;      // 0 = Sine
+    static const int lfoWaveformMax;      // 3 = Triangle
+    static const int lfoWaveformDefault;  // 0 = Sine
 
     static const float lfoAmountMin;      // 0.0
     static const float lfoAmountMax;      // 1.0
@@ -161,8 +166,9 @@ private:
     juce::dsp::Oscillator<float> oscillator1; // Sine wave
     juce::dsp::Oscillator<float> oscillator2; // Square wave
 
-    // LFO for modulation (simplified)
+    // LFO for modulation
     juce::dsp::Oscillator<float> lfoOscillator;
+    int lfoWaveform = 0; // 0: Sine, 1: Triangle, 2: Square, 3: Saw
 
     // ADSR envelope
     juce::ADSR adsr;
@@ -181,8 +187,9 @@ private:
     void updateFilter();
     void updateOscillatorWaveform(juce::dsp::Oscillator<float>& oscillator, int waveformType);
 
-    // LFO helper methods (simplified)
+    // LFO helper methods
     void updateLFO();
+    void setLFOWaveform(int waveformType);
     float getLFOValue();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyVST3PluginAudioProcessor)

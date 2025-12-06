@@ -7,7 +7,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Set window size for 5 columns with waveform controls
-    setSize (1200, 800); // Optimized layout for better control organization
+    setSize (1200, 950); // Increased height for LFO section visibility
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -57,9 +57,11 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     setupSlider(filterResonanceSlider, filterResonanceLabel, filterResonanceValueLabel,
                 "Filter Resonance", 0.1f, 10.0f, 0.707f, "");
 
-    // Setup LFO controls (simplified)
+    // Setup LFO controls
     setupSlider(lfoRateSlider, lfoRateLabel, lfoRateValueLabel,
                 "LFO Rate", 0.1f, 20.0f, 1.0f, " Hz");
+
+    setupWaveformSelector(lfoWaveformSelector, lfoWaveformLabel, "LFO Waveform");
 
     setupSlider(lfoAmountSlider, lfoAmountLabel, lfoAmountValueLabel,
                 "LFO Amount", 0.0f, 1.0f, 0.0f, "");
@@ -124,9 +126,12 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     testModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramTestMode, testModeButton);
 
-    // LFO Attachments (simplified)
+    // LFO Attachments
     lfoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoRate, lfoRateSlider);
+
+    lfoWaveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoWaveform, lfoWaveformSelector);
 
     lfoAmountAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoAmount, lfoAmountSlider);
@@ -322,10 +327,10 @@ void MyVST3PluginAudioProcessorEditor::resized()
     }
 
     // =======================================================================
-    // LFO SECTION (Simplified)
+    // LFO SECTION
     // =======================================================================
 
-    // LFO Main Controls (Rate and Amount)
+    // LFO Controls (Rate, Waveform, Amount, Routing)
     for (int col = 0; col < numCols; ++col)
     {
         auto lfoArea = area.removeFromTop(lfoSectionHeight).withWidth(controlWidth).withX(col * controlWidth);
@@ -337,18 +342,20 @@ void MyVST3PluginAudioProcessorEditor::resized()
                 lfoRateSlider.setBounds(lfoArea.removeFromTop(35));
                 lfoRateValueLabel.setBounds(lfoArea);
                 break;
-            case 1: // LFO Amount
+            case 1: // LFO Waveform
+                lfoWaveformLabel.setBounds(lfoArea.removeFromTop(15));
+                lfoWaveformSelector.setBounds(lfoArea);
+                break;
+            case 2: // LFO Amount
                 lfoAmountLabel.setBounds(lfoArea.removeFromTop(15));
                 lfoAmountSlider.setBounds(lfoArea.removeFromTop(35));
                 lfoAmountValueLabel.setBounds(lfoArea);
                 break;
-            case 2: // LFO Routing Section
+            case 3: // LFO Routing Section
                 lfoRoutingLabel.setBounds(lfoArea.removeFromTop(15));
                 // Arrange routing buttons vertically within this cell
                 lfoToOsc1Button.setBounds(lfoArea.removeFromTop(20));
                 lfoToAmpButton.setBounds(lfoArea.removeFromTop(20));
-                break;
-            case 3: // Empty space for future LFO controls
                 break;
         }
     }
