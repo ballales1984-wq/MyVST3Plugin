@@ -22,7 +22,10 @@ MyVST3Plugin/
 └── README.md                       # Documentazione utente
 ```
 
-## 🚀 Flusso di Sviluppo Standard
+## 🚀 Flusso di Sviluppo Sicuro (WORKFLOW PROTETTO)
+
+### 🛡️ **Principio Base: SICUREZZA PRIMA DI TUTTO**
+**Workflow sicuro:** Versione integra → Modifica → Test → Se OK salva → Se KO correggi → Se correzione fallisce torna a versione standard
 
 ### 1. **Setup Ambiente di Sviluppo**
 ```bash
@@ -30,10 +33,46 @@ MyVST3Plugin/
 cd C:\Users\user\Downloads\JUCE-master\JUCE-master\extras\Projucer\Builds\VisualStudio2022\MyVST3Plugin
 ```
 
-### 2. **Modifiche al Codice**
-- Modifica solo i file in `Source/`
-- **NON modificare** file in `build/` o `build_release/`
-- Testa sempre le modifiche in Debug prima del Release
+### 2. **Workflow Sicuro con Branch**
+
+#### **Branch Principali:**
+- **`main`** - Branch di sviluppo attivo
+- **`stable`** - Versione stabile funzionante (backup sicuro)
+
+#### **Branch Feature:**
+- **`feature/nome-funzionalita`** - Per sviluppare nuove funzionalità
+
+#### **Iniziare una Nuova Funzionalità:**
+```bash
+# 1. Crea branch per la nuova funzionalità
+.\start_feature.bat
+
+# 2. Lavora nel branch creato
+# Modifica solo i file in Source/
+# Fai commit frequenti con .\save_feature.bat
+```
+
+#### **Se Qualcosa Va Storto:**
+```bash
+# Annulla modifiche problematiche (perde tutto dall'ultimo commit)
+.\emergency_rollback.bat
+
+# OPPURE torna completamente alla versione stabile
+.\restore_stable.bat
+```
+
+#### **Completare una Funzionalità:**
+```bash
+# Unisce la funzionalità completata al main
+.\finish_feature.bat
+```
+
+### 3. **Modifiche al Codice**
+- ✅ Modifica solo i file in `Source/`
+- ❌ **NON modificare** file in `build/` o `build_release/`
+- ✅ **NON modificare** direttamente `main` o `stable`
+- ✅ Testa sempre le modifiche in Debug prima del Release
+- ✅ Fai commit frequenti per salvare progressi
 
 ### 3. **Build Process**
 
@@ -149,6 +188,13 @@ C:\Users\user\Downloads\JUCE-master\JUCE-master\
 - `compile_now.bat` - Solo compilazione (no linking)
 - `compile_final.bat` - Compilazione ottimizzata
 
+### **🛡️ Script Workflow Sicuro (.bat)**
+- `start_feature.bat` - **INIZIA** una nuova funzionalità (crea branch sicuro)
+- `save_feature.bat` - **SALVA** modifiche nel branch corrente
+- `emergency_rollback.bat` - **ANNULLA** modifiche problematiche
+- `restore_stable.bat` - **RITORNA** alla versione stabile
+- `finish_feature.bat` - **COMPLETA** funzionalità e unisce a main
+
 ### **Script PowerShell (.ps1)**
 - `install_vst3_local.ps1` - Installa VST3 localmente
 - `install_vst3.ps1` - Installa VST3 globalmente (admin)
@@ -213,9 +259,59 @@ Start-Process "build\MyVST3Plugin_artefacts\Debug\Standalone\MyVST3Plugin.exe"
 2. Ricompila: `.\quick_build.bat`
 3. Verifica Visual Studio Build Tools installati
 
+## 🛡️ Workflow Sicuro Dettagliato
+
+### **Processo Standard per Ogni Funzionalità:**
+
+#### **FASE 1: Preparazione**
+```bash
+# 1. Assicurati di essere su main e aggiornato
+git checkout main
+git pull origin main
+
+# 2. Crea branch per nuova funzionalità
+.\start_feature.bat
+# Inserisci nome funzionalità (es: "pwm_square_wave")
+```
+
+#### **FASE 2: Sviluppo Sicuro**
+```bash
+# Modifica codice in Source/
+# Testa frequentemente con:
+.\quick_build.bat
+# Avvia: build\MyVST3Plugin_artefacts\Debug\Standalone\MyVST3Plugin.exe
+
+# Salva progressi frequentemente:
+.\save_feature.bat
+# Inserisci messaggio commit descrittivo
+```
+
+#### **FASE 3: Gestione Errori**
+```bash
+# Se modifiche non funzionano:
+.\emergency_rollback.bat  # Annulla modifiche dall'ultimo commit
+
+# Se problemi gravi, torna alla versione stabile:
+.\restore_stable.bat
+```
+
+#### **FASE 4: Completamento**
+```bash
+# Quando funzionalità è pronta:
+.\finish_feature.bat
+# Questo unisce al main e pulisce il branch
+```
+
+### **Regole Importanti:**
+- 🔒 **Mai modificare direttamente `main` o `stable`**
+- 💾 **Commit frequenti** per salvare progressi
+- ✅ **Testa sempre** prima di salvare
+- 🔄 **Se qualcosa va storto, usa rollback**
+- 🏁 **Completa funzionalità** solo quando stabile
+
 ## 📋 Checklist Pre-Commit
 
-Prima di ogni commit, verifica:
+Prima di ogni commit (con `save_feature.bat`), verifica:
 
 - [ ] **Build riuscito** in Debug mode
 - [ ] **Test standalone** funziona
@@ -223,6 +319,7 @@ Prima di ogni commit, verifica:
 - [ ] **Codice pulito** e ben commentato
 - [ ] **File modificati** solo in `Source/`
 - [ ] **Messaggio commit** descrittivo e formattato correttamente
+- [ ] **Funzionalità testata** manualmente
 
 ## 🚀 Deployment Finale
 
