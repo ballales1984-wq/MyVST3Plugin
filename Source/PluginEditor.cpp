@@ -7,7 +7,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Set window size for 5 columns with waveform controls
-    setSize (900, 650); // Added LFO controls row
+    setSize (900, 750); // Increased height for PWM control
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -32,6 +32,10 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     // Setup Osc2 detune slider (NEW)
     setupSlider(osc2DetuneSlider, osc2DetuneLabel, osc2DetuneValueLabel,
                 "Osc2 Detune", -50.0f, 50.0f, 0.0f, " cents");
+
+    // Setup Square PWM slider (NEW)
+    setupSlider(squarePWMSlider, squarePWMLabel, squarePWMValueLabel,
+                "Square PWM", 0.1f, 0.9f, 0.5f, "%");
 
     // TEST: Both waveform selectors now
     setupWaveformSelector(osc1WaveformSelector, osc1WaveformLabel, "Osc1 Waveform");
@@ -97,6 +101,9 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
 
     osc2DetuneAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(  // NEW
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramOsc2Detune, osc2DetuneSlider);
+
+    squarePWMAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(  // NEW
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramSquarePWM, squarePWMSlider);
 
     // TEST: Both waveform attachments now
     osc1WaveformAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(  // NEW
@@ -294,7 +301,7 @@ void MyVST3PluginAudioProcessorEditor::resized()
 
     const int margin = 8;
     const int controlWidth = (area.getWidth() - margin * 5) / 4;  // 4 controls per row
-    const int rowHeight = 65;
+    const int rowHeight = 60;
 
     int y = area.getY();
 
@@ -321,9 +328,15 @@ void MyVST3PluginAudioProcessorEditor::resized()
     osc2DetuneSlider.setBounds(margin, y + 15, controlWidth, 30);
     osc2DetuneValueLabel.setBounds(margin, y + 45, controlWidth, 15);
 
-    masterVolumeLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
-    masterVolumeSlider.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 30);
-    masterVolumeValueLabel.setBounds(margin + controlWidth + margin, y + 45, controlWidth, 15);
+    squarePWMLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
+    squarePWMSlider.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 30);
+    squarePWMValueLabel.setBounds(margin + controlWidth + margin, y + 45, controlWidth, 15);
+
+    // Row 3.5: Master Volume (spostato in nuova riga)
+    y += rowHeight;
+    masterVolumeLabel.setBounds(margin, y, controlWidth, 15);
+    masterVolumeSlider.setBounds(margin, y + 15, controlWidth, 30);
+    masterVolumeValueLabel.setBounds(margin, y + 45, controlWidth, 15);
 
     // Row 4: ADSR - Attack + Decay
     y += rowHeight;

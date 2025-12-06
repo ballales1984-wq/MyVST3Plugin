@@ -61,6 +61,9 @@ private:
     juce::ComboBox osc1WaveformSelector;  // NEW: Waveform selector for Osc1
     juce::ComboBox osc2WaveformSelector;  // NEW: Waveform selector for Osc2
 
+    // PWM Control
+    juce::Slider squarePWMSlider;         // NEW: PWM slider for square wave
+
     // Filter sliders
     juce::Slider filterCutoffSlider;
     juce::Slider filterResonanceSlider;
@@ -77,6 +80,7 @@ private:
     juce::Label osc1FrequencyLabel;
     juce::Label osc2FrequencyLabel;
     juce::Label osc2DetuneLabel;  // NEW: Detune label
+    juce::Label squarePWMLabel;     // NEW: PWM label
     juce::Label osc1WaveformLabel;  // NEW: Waveform label for Osc1
     juce::Label osc2WaveformLabel;  // NEW: Waveform label for Osc2
     juce::Label attackLabel;
@@ -99,6 +103,7 @@ private:
     juce::Label osc1FrequencyValueLabel;
     juce::Label osc2FrequencyValueLabel;
     juce::Label osc2DetuneValueLabel;  // NEW: Detune value label
+    juce::Label squarePWMValueLabel; // NEW: PWM value label
     juce::Label attackValueLabel;
     juce::Label decayValueLabel;
     juce::Label sustainValueLabel;
@@ -130,6 +135,7 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc1FrequencyAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2FrequencyAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> osc2DetuneAttachment;  // NEW: Detune attachment
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> squarePWMAttachment;      // NEW: PWM attachment
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc1WaveformAttachment;  // NEW: Waveform attachment for Osc1
     std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment> osc2WaveformAttachment;  // NEW: Waveform attachment for Osc2
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> attackAttachment;
