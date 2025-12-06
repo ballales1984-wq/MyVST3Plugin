@@ -341,7 +341,7 @@ void MyVST3PluginAudioProcessor::updateOscillators()
         oscillator1.setFrequency(osc1Freq);
     }
 
-    // Update Osc1 waveform
+    // TEST: Only Osc1 waveform update for now
     const auto osc1WaveformParam = parameters.getRawParameterValue(paramOsc1Waveform);
     int osc1Waveform = static_cast<int>(osc1WaveformParam->load());
     updateOscillatorWaveform(oscillator1, osc1Waveform);
@@ -363,7 +363,7 @@ void MyVST3PluginAudioProcessor::updateOscillators()
 
     oscillator2.setFrequency(detunedOsc2Freq);
 
-    // Update Osc2 waveform
+    // TEST: Both waveforms now
     const auto osc2WaveformParam = parameters.getRawParameterValue(paramOsc2Waveform);
     int osc2Waveform = static_cast<int>(osc2WaveformParam->load());
     updateOscillatorWaveform(oscillator2, osc2Waveform);
