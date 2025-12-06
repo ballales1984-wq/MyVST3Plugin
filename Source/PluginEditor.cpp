@@ -7,7 +7,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Set window size for 5 columns with waveform controls
-    setSize (900, 650); // Added LFO controls row
+    setSize (900, 750); // Increased height for PWM control
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -301,7 +301,7 @@ void MyVST3PluginAudioProcessorEditor::resized()
 
     const int margin = 8;
     const int controlWidth = (area.getWidth() - margin * 5) / 4;  // 4 controls per row
-    const int rowHeight = 65;
+    const int rowHeight = 60;
 
     int y = area.getY();
 
