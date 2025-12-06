@@ -42,13 +42,28 @@ A powerful and versatile VST3 synthesizer plugin built with JUCE framework, feat
    ```
    C:\Program Files\Common Files\VST3\
    ```
-3. Rescan plugins in your DAW
+   Or for local installation (recommended):
+   ```
+   %USERPROFILE%\Documents\REAPER\UserPlugins\
+   ```
+3. **For Reaper**: Go to Options → Preferences → Plug-ins → VST → Clear cache and rescan
+4. The plugin will appear under "MyVST3Plugin" in your effects list
 
 ### Standalone Version
 The plugin also includes a standalone executable for testing without a DAW:
 ```
 MyVST3Plugin_artefacts\Debug\Standalone\MyVST3Plugin.exe
 ```
+
+### Reaper-Specific Setup
+For optimal performance in Reaper:
+
+1. **Plugin Installation**: Place the .vst3 file in your Reaper UserPlugins directory
+2. **VST Scanning**: Use Reaper's VST scanner (Options → Preferences → Plug-ins → VST)
+3. **Buffer Settings**: Works best with Reaper's default buffer settings (64-512 samples)
+4. **MIDI Input**: Enable "Send all input to VSTi" in Reaper's MIDI settings for keyboard control
+
+**Reaper Compatibility**: ✅ Fully tested and optimized for Reaper
 
 ## 🎛️ Usage
 

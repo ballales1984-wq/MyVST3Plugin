@@ -6,16 +6,17 @@ add_subdirectory("../../../../.." "juce_build")
 
 juce_add_plugin(MyVST3Plugin
     VERSION "1.0.0"
-    BUNDLE_ID "com.example.myvst3plugin"
-    COMPANY_NAME "Example Company"
-    COMPANY_WEBSITE "https://example.com"
-    COMPANY_EMAIL "info@example.com"
-    PLUGIN_MANUFACTURER_CODE "ExCo"
+    BUNDLE_ID "com.ballales1984.myvst3plugin"
+    COMPANY_NAME "ballales1984-wq"
+    COMPANY_WEBSITE "https://github.com/ballales1984-wq/MyVST3Plugin"
+    COMPANY_EMAIL "contact@yourdomain.com"
+    PLUGIN_MANUFACTURER_CODE "BL84"
     PLUGIN_CODE "Mvst"
     FORMATS Standalone VST3
     PRODUCT_NAME "MyVST3Plugin"
-    DESCRIPTION "A simple dual oscillator VST3 synthesizer"
+    DESCRIPTION "Professional Dual Oscillator VST3 Synthesizer for Reaper"
     IS_SYNTH TRUE
+    VST3_CATEGORIES "Instrument|Synthesizer"
 )
 
 # Add source files
