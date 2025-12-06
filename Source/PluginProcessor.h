@@ -123,6 +123,12 @@ public:
     static const juce::String paramOsc1Waveform;  // NEW: Waveform selection for Osc1
     static const juce::String paramOsc2Waveform;  // NEW: Waveform selection for Osc2
     static const juce::String paramSquarePWM;     // NEW: Pulse Width Modulation for square wave
+
+    // Third Oscillator parameters - VERSION 2
+    static const juce::String paramOsc3Frequency;  // Third oscillator frequency
+    static const juce::String paramOsc3Waveform;   // Third oscillator waveform
+    static const juce::String paramOsc3Mix;        // Third oscillator mix level
+    static const juce::String paramOsc3Enabled;    // Third oscillator enable/disable
     static const juce::String paramAttack;
     static const juce::String paramDecay;
     static const juce::String paramSustain;
@@ -155,6 +161,19 @@ public:
     static const float squarePWMax;
     static const float squarePWMDefault;
 
+    // Third Oscillator constants
+    static const float osc3FrequencyDefault;
+
+    static const float osc3WaveformMin;
+    static const float osc3WaveformMax;
+    static const float osc3WaveformDefault;
+
+    static const float osc3MixMin;
+    static const float osc3MixMax;
+    static const float osc3MixDefault;
+
+    static const float osc3EnabledDefault;
+
     static const float adsrMin;
     static const float adsrMax;
     static const float attackDefault;
@@ -173,6 +192,7 @@ private:
     double currentFrequency = 440.0;
     float osc1Mix = 1.0f; // Impostato a pieno volume
     float osc2Mix = 1.0f; // Impostato a pieno volume
+    float osc3Mix = 0.0f; // Third oscillator mix - VERSION 2
 
     //==============================================================================
     // Helper methods for MIDI
@@ -182,6 +202,7 @@ private:
     // Oscillators
     juce::dsp::Oscillator<float> oscillator1; // Sine wave
     juce::dsp::Oscillator<float> oscillator2; // Square wave
+    juce::dsp::Oscillator<float> oscillator3; // Third oscillator - VERSION 2
 
     // LFO for modulation
     juce::dsp::Oscillator<float> lfoOscillator;

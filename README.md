@@ -19,6 +19,12 @@ A powerful and versatile VST3 synthesizer plugin built with JUCE framework, feat
 - **Resonance Control**: 0.1 - 10.0 Q-factor adjustment
 - **Stereo Processing**: Independent filter processing per channel
 
+### FM Modulation System
+- **Third Oscillator**: Dedicated FM modulator for advanced sound design
+- **FM Frequency**: 20Hz - 2000Hz modulation rate control
+- **FM Mix**: 0-100% modulation intensity
+- **FM Enable**: On/off switch for frequency modulation
+
 ### User Interface
 - **Real-time Controls**: All parameters adjustable in real-time
 - **Visual Feedback**: Live parameter value display
@@ -76,6 +82,12 @@ For optimal performance in Reaper:
 5. Adjust ADSR envelope for desired sound shaping
 6. Use the filter to sculpt the tone
 7. Control master volume for final output level
+
+### FM Modulation
+8. Enable FM modulation with the "FM ON" button
+9. Set FM frequency (20Hz-2000Hz) for modulation speed
+10. Adjust FM mix (0-100%) for modulation intensity
+11. Experiment with different FM frequencies for evolving timbres
 
 ### Oscillator Controls
 - **Waveform Selection**: Choose from 4 waveforms per oscillator

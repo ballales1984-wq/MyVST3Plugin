@@ -10,6 +10,12 @@ const juce::String MyVST3PluginAudioProcessor::paramOsc2Detune = "osc2Detune";  
 const juce::String MyVST3PluginAudioProcessor::paramOsc1Waveform = "osc1Waveform";  // NEW: Waveform for Osc1
 const juce::String MyVST3PluginAudioProcessor::paramOsc2Waveform = "osc2Waveform";  // NEW: Waveform for Osc2
 const juce::String MyVST3PluginAudioProcessor::paramSquarePWM = "squarePWM";  // NEW: Pulse Width Modulation for square wave
+
+// Third Oscillator parameters - VERSION 2
+const juce::String MyVST3PluginAudioProcessor::paramOsc3Frequency = "osc3Frequency";  // Third oscillator frequency
+const juce::String MyVST3PluginAudioProcessor::paramOsc3Waveform = "osc3Waveform";   // Third oscillator waveform
+const juce::String MyVST3PluginAudioProcessor::paramOsc3Mix = "osc3Mix";             // Third oscillator mix level
+const juce::String MyVST3PluginAudioProcessor::paramOsc3Enabled = "osc3Enabled";     // Third oscillator enable/disable
 const juce::String MyVST3PluginAudioProcessor::paramAttack = "attack";
 const juce::String MyVST3PluginAudioProcessor::paramDecay = "decay";
 const juce::String MyVST3PluginAudioProcessor::paramSustain = "sustain";
@@ -57,6 +63,19 @@ const float MyVST3PluginAudioProcessor::osc2WaveformDefault = 1.0f;  // Square w
 const float MyVST3PluginAudioProcessor::squarePWMMin = 0.1f;      // 10% minimum
 const float MyVST3PluginAudioProcessor::squarePWMax = 0.9f;       // 90% maximum
 const float MyVST3PluginAudioProcessor::squarePWMDefault = 0.5f;  // 50% default (standard square)
+
+// Third Oscillator parameters - VERSION 2
+const float MyVST3PluginAudioProcessor::osc3FrequencyDefault = 330.0f;  // E4 note (higher pitch)
+
+const float MyVST3PluginAudioProcessor::osc3WaveformMin = 0.0f;
+const float MyVST3PluginAudioProcessor::osc3WaveformMax = 3.0f;
+const float MyVST3PluginAudioProcessor::osc3WaveformDefault = 2.0f;  // Saw wave default
+
+const float MyVST3PluginAudioProcessor::osc3MixMin = 0.0f;         // 0% mix
+const float MyVST3PluginAudioProcessor::osc3MixMax = 1.0f;         // 100% mix
+const float MyVST3PluginAudioProcessor::osc3MixDefault = 0.0f;     // Disabled by default
+
+const float MyVST3PluginAudioProcessor::osc3EnabledDefault = 0.0f; // Disabled by default
 
 const float MyVST3PluginAudioProcessor::adsrMin = 0.001f;
 const float MyVST3PluginAudioProcessor::adsrMax = 5.0f;
@@ -124,6 +143,14 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
                                                                osc2WaveformMin, osc2WaveformMax, osc2WaveformDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramSquarePWM, "Square PWM",
                                                                squarePWMMin, squarePWMax, squarePWMDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramOsc3Frequency, "Osc3 Frequency",
+                                                               oscFrequencyMin, oscFrequencyMax, osc3FrequencyDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramOsc3Waveform, "Osc3 Waveform",
+                                                               osc3WaveformMin, osc3WaveformMax, osc3WaveformDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramOsc3Mix, "Osc3 Mix",
+                                                               osc3MixMin, osc3MixMax, osc3MixDefault),
+                   std::make_unique<juce::AudioParameterBool>(paramOsc3Enabled, "Osc3 Enabled",
+                                                              osc3EnabledDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramAttack, "Attack",
                                                                adsrMin, adsrMax, attackDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramDecay, "Decay",
@@ -238,6 +265,7 @@ void MyVST3PluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
 
     oscillator1.prepare(spec);
     oscillator2.prepare(spec);
+    oscillator3.prepare(spec);
 
     adsr.setSampleRate(sampleRate);
 
@@ -339,8 +367,31 @@ void MyVST3PluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
             for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
             {
+                // OSC3 as frequency modulator for OSC1 (if enabled)
+                float osc1Modulation = 0.0f;
+                if (osc3Mix > 0.0f)
+                {
+                    // Use OSC3 as FM modulation source for OSC1
+                    float osc3Sample = oscillator3.processSample(0.0f);
+                    osc1Modulation = osc3Sample * osc3Mix * 0.1f; // Scale modulation
+                }
+
+                // Apply FM modulation to OSC1 frequency (temporary modulation per sample)
+                float originalOsc1Freq = oscillator1.getFrequency();
+                if (osc1Modulation != 0.0f)
+                {
+                    float modulatedFreq = originalOsc1Freq * (1.0f + osc1Modulation);
+                    oscillator1.setFrequency(modulatedFreq);
+                }
+
                 float osc1Sample = oscillator1.processSample(0.0f) * osc1Mix;
                 float osc2Sample = oscillator2.processSample(0.0f) * osc2Mix;
+
+                // Restore original frequency for next sample
+                if (osc1Modulation != 0.0f)
+                {
+                    oscillator1.setFrequency(originalOsc1Freq);
+                }
 
                 float envelopeValue = adsr.getNextSample();
                 // Note: ADSR doesn't have getCurrentLevel() in JUCE
@@ -459,6 +510,31 @@ void MyVST3PluginAudioProcessor::updateOscillators()
     const auto osc2WaveformParam = parameters.getRawParameterValue(paramOsc2Waveform);
     int osc2Waveform = static_cast<int>(osc2WaveformParam->load());
     updateOscillatorWaveform(oscillator2, osc2Waveform, pwmValue);
+
+    // Third Oscillator - VERSION 2 (FM modulation for OSC1)
+    const auto osc3EnabledParam = parameters.getRawParameterValue(paramOsc3Enabled);
+    bool osc3Enabled = osc3EnabledParam->load() > 0.5f;
+
+    if (osc3Enabled)
+    {
+        // Get Osc3 frequency for modulation
+        const auto osc3FreqParam = parameters.getRawParameterValue(paramOsc3Frequency);
+        float osc3Freq = osc3FreqParam->load();
+        oscillator3.setFrequency(osc3Freq);
+
+        // Get Osc3 waveform
+        const auto osc3WaveformParam = parameters.getRawParameterValue(paramOsc3Waveform);
+        int osc3Waveform = static_cast<int>(osc3WaveformParam->load());
+        updateOscillatorWaveform(oscillator3, osc3Waveform, pwmValue);
+
+        // Get Osc3 modulation amount
+        const auto osc3MixParam = parameters.getRawParameterValue(paramOsc3Mix);
+        osc3Mix = osc3MixParam->load();
+    }
+    else
+    {
+        osc3Mix = 0.0f; // No modulation
+    }
 }
 
 void MyVST3PluginAudioProcessor::updateADSR()
