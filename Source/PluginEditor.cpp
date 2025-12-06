@@ -7,7 +7,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Set window size for 5 columns with waveform controls
-    setSize (900, 600); // Simplified single-view layout
+    setSize (900, 650); // Added LFO controls row
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -123,6 +123,19 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     filterResonanceAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramFilterResonance, filterResonanceSlider);
 
+    // LFO attachments
+    lfoRateAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoRate, lfoRateSlider);
+
+    lfoAmountAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoAmount, lfoAmountSlider);
+
+    lfoToOsc1Attachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoToOsc1, lfoToOsc1Button);
+
+    lfoToAmpAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
+        audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramLfoToAmp, lfoToAmpButton);
+
     testModeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::ButtonAttachment>(
         audioProcessor.getParameters(), MyVST3PluginAudioProcessor::paramTestMode, testModeButton);
 
@@ -214,6 +227,18 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     addAndMakeVisible(filterResonanceSlider);
     addAndMakeVisible(filterResonanceValueLabel);
 
+    // Add LFO controls
+    addAndMakeVisible(lfoRateLabel);
+    addAndMakeVisible(lfoRateSlider);
+    addAndMakeVisible(lfoRateValueLabel);
+
+    addAndMakeVisible(lfoAmountLabel);
+    addAndMakeVisible(lfoAmountSlider);
+    addAndMakeVisible(lfoAmountValueLabel);
+
+    addAndMakeVisible(lfoToOsc1Button);
+    addAndMakeVisible(lfoToAmpButton);
+
     // Setup test mode button
     testModeButton.setButtonText("🎵 TEST MODE 🎵");
     testModeButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
@@ -248,17 +273,20 @@ void MyVST3PluginAudioProcessorEditor::paint (juce::Graphics& g)
 
 void MyVST3PluginAudioProcessorEditor::resized()
 {
-    auto area = getLocalBounds().reduced(10);
+    auto bounds = getLocalBounds().reduced(10);
 
     // Title at the top
-    titleLabel.setBounds(area.removeFromTop(25));
+    titleLabel.setBounds(bounds.removeFromTop(25));
 
     // Test Mode button below title
-    testModeButton.setBounds(area.removeFromTop(30));
+    testModeButton.setBounds(bounds.removeFromTop(30));
 
     // Keyboard component at the bottom
-    auto keyboardArea = area.removeFromBottom(80);
+    auto keyboardArea = bounds.removeFromBottom(80);
     keyboardComponent.setBounds(keyboardArea);
+
+    // Now work with the remaining area for controls
+    auto area = bounds;
 
     // =======================================================================
     // SIMPLIFIED SINGLE-VIEW LAYOUT
@@ -266,7 +294,7 @@ void MyVST3PluginAudioProcessorEditor::resized()
 
     const int margin = 8;
     const int controlWidth = (area.getWidth() - margin * 5) / 4;  // 4 controls per row
-    const int rowHeight = 70;
+    const int rowHeight = 65;
 
     int y = area.getY();
 
@@ -328,6 +356,20 @@ void MyVST3PluginAudioProcessorEditor::resized()
     filterResonanceLabel.setBounds(margin, y, area.getWidth() - margin * 2, 15);
     filterResonanceSlider.setBounds(margin, y + 15, area.getWidth() - margin * 2, 30);
     filterResonanceValueLabel.setBounds(margin, y + 45, area.getWidth() - margin * 2, 15);
+
+    // Row 8: LFO Rate + LFO Amount
+    y += rowHeight;
+    lfoRateLabel.setBounds(margin, y, controlWidth, 15);
+    lfoRateSlider.setBounds(margin, y + 15, controlWidth, 30);
+    lfoRateValueLabel.setBounds(margin, y + 45, controlWidth, 15);
+
+    lfoAmountLabel.setBounds(margin + controlWidth + margin, y, controlWidth, 15);
+    lfoAmountSlider.setBounds(margin + controlWidth + margin, y + 15, controlWidth, 30);
+    lfoAmountValueLabel.setBounds(margin + controlWidth + margin, y + 45, controlWidth, 15);
+
+    // LFO routing buttons (compact)
+    lfoToOsc1Button.setBounds(margin + (controlWidth + margin) * 2, y + 15, controlWidth / 2 - 2, 25);
+    lfoToAmpButton.setBounds(margin + (controlWidth + margin) * 2 + controlWidth / 2 + 2, y + 15, controlWidth / 2 - 2, 25);
 }
 
 // Simplified single-view layout
