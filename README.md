@@ -24,6 +24,7 @@ A powerful and versatile VST3 synthesizer plugin built with JUCE framework, feat
 - **FM Frequency**: 20Hz - 2000Hz modulation rate control
 - **FM Mix**: 0-100% modulation intensity
 - **FM Enable**: On/off switch for frequency modulation
+- **Optimized Layout**: Controls positioned to avoid keyboard overlap in DAWs
 
 ### User Interface
 - **Real-time Controls**: All parameters adjustable in real-time
