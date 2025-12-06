@@ -7,7 +7,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
       keyboardComponent (audioProcessor.keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard)
 {
     // Set window size for 5 columns with waveform controls
-    setSize (1200, 780); // Further optimized - LFO integrated with filters
+    setSize (1200, 820); // Better balanced layout with proper spacing
 
     // Setup title
     titleLabel.setText("MyVST3Plugin - Debug Test", juce::dontSendNotification);
@@ -221,10 +221,10 @@ void MyVST3PluginAudioProcessorEditor::resized()
     // =======================================================================
 
     const int numCols = 4;
-    const int oscSectionHeight = 70;    // Oscillator controls - even more compact
-    const int adsrSectionHeight = 60;   // ADSR envelope - more compact
-    const int filterSectionHeight = 75; // Filter + LFO section - needs more space
-    const int lfoSectionHeight = 65;    // LFO section - more compact
+    const int oscSectionHeight = 80;    // Oscillator controls - comfortable spacing
+    const int adsrSectionHeight = 65;   // ADSR envelope - good spacing
+    const int filterSectionHeight = 65; // Filter section - dedicated row
+    const int lfoSectionHeight = 70;    // LFO section - dedicated row
     const int controlWidth = area.getWidth() / numCols;
 
     // =======================================================================
@@ -234,36 +234,36 @@ void MyVST3PluginAudioProcessorEditor::resized()
     // Osc1 Controls (Freq + Waveform)
     {
         auto osc1Area = area.removeFromTop(oscSectionHeight).withWidth(controlWidth).withX(0 * controlWidth);
-        osc1FrequencyLabel.setBounds(osc1Area.removeFromTop(12));
-        osc1FrequencySlider.setBounds(osc1Area.removeFromTop(28));
-        osc1FrequencyValueLabel.setBounds(osc1Area.removeFromTop(12));
-        osc1WaveformLabel.setBounds(osc1Area.removeFromTop(12));
+        osc1FrequencyLabel.setBounds(osc1Area.removeFromTop(14));
+        osc1FrequencySlider.setBounds(osc1Area.removeFromTop(32));
+        osc1FrequencyValueLabel.setBounds(osc1Area.removeFromTop(14));
+        osc1WaveformLabel.setBounds(osc1Area.removeFromTop(14));
         osc1WaveformSelector.setBounds(osc1Area);
     }
 
     // Osc2 Controls (Freq + Waveform)
     {
         auto osc2Area = area.removeFromTop(oscSectionHeight).withWidth(controlWidth).withX(1 * controlWidth);
-        osc2FrequencyLabel.setBounds(osc2Area.removeFromTop(12));
-        osc2FrequencySlider.setBounds(osc2Area.removeFromTop(28));
-        osc2FrequencyValueLabel.setBounds(osc2Area.removeFromTop(12));
-        osc2WaveformLabel.setBounds(osc2Area.removeFromTop(12));
+        osc2FrequencyLabel.setBounds(osc2Area.removeFromTop(14));
+        osc2FrequencySlider.setBounds(osc2Area.removeFromTop(32));
+        osc2FrequencyValueLabel.setBounds(osc2Area.removeFromTop(14));
+        osc2WaveformLabel.setBounds(osc2Area.removeFromTop(14));
         osc2WaveformSelector.setBounds(osc2Area);
     }
 
     // Osc2 Detune (Chorus control)
     {
         auto detuneArea = area.removeFromTop(oscSectionHeight).withWidth(controlWidth).withX(2 * controlWidth);
-        osc2DetuneLabel.setBounds(detuneArea.removeFromTop(12));
-        osc2DetuneSlider.setBounds(detuneArea.removeFromTop(28));
+        osc2DetuneLabel.setBounds(detuneArea.removeFromTop(14));
+        osc2DetuneSlider.setBounds(detuneArea.removeFromTop(32));
         osc2DetuneValueLabel.setBounds(detuneArea);
     }
 
     // Master Volume
     {
         auto masterArea = area.removeFromTop(oscSectionHeight).withWidth(controlWidth).withX(3 * controlWidth);
-        masterVolumeLabel.setBounds(masterArea.removeFromTop(12));
-        masterVolumeSlider.setBounds(masterArea.removeFromTop(28));
+        masterVolumeLabel.setBounds(masterArea.removeFromTop(14));
+        masterVolumeSlider.setBounds(masterArea.removeFromTop(32));
         masterVolumeValueLabel.setBounds(masterArea);
     }
 
@@ -301,38 +301,56 @@ void MyVST3PluginAudioProcessorEditor::resized()
     }
 
     // =======================================================================
-    // FILTER SECTION (Test Mode moved to top-right)
+    // FILTER SECTION (Dedicated Row - Well Spaced)
+    // =======================================================================
+
+    // Filter Cutoff - Takes 2 columns on the left
+    {
+        auto cutoffArea = area.removeFromTop(filterSectionHeight).withWidth(controlWidth * 2).withX(0);
+        filterCutoffLabel.setBounds(cutoffArea.removeFromTop(14));
+        filterCutoffSlider.setBounds(cutoffArea.removeFromTop(32));
+        filterCutoffValueLabel.setBounds(cutoffArea);
+    }
+
+    // Filter Resonance - Takes 2 columns on the right
+    {
+        auto resonanceArea = area.removeFromTop(filterSectionHeight).withWidth(controlWidth * 2).withX(controlWidth * 2);
+        filterResonanceLabel.setBounds(resonanceArea.removeFromTop(14));
+        filterResonanceSlider.setBounds(resonanceArea.removeFromTop(32));
+        filterResonanceValueLabel.setBounds(resonanceArea);
+    }
+
+    // =======================================================================
+    // LFO SECTION (Dedicated Row - Organized)
     // =======================================================================
 
     for (int col = 0; col < numCols; ++col)
     {
-        auto filterArea = area.removeFromTop(filterSectionHeight).withWidth(controlWidth).withX(col * controlWidth);
+        auto lfoArea = area.removeFromTop(lfoSectionHeight).withWidth(controlWidth).withX(col * controlWidth);
 
         switch (col)
         {
-            case 0: // Filter Cutoff - More prominent positioning
-                filterCutoffLabel.setBounds(filterArea.removeFromTop(18));
-                filterCutoffSlider.setBounds(filterArea.removeFromTop(45));
-                filterCutoffValueLabel.setBounds(filterArea);
+            case 0: // LFO Rate
+                lfoRateLabel.setBounds(lfoArea.removeFromTop(14));
+                lfoRateSlider.setBounds(lfoArea.removeFromTop(32));
+                lfoRateValueLabel.setBounds(lfoArea);
                 break;
-            case 1: // Filter Resonance - More prominent positioning
-                filterResonanceLabel.setBounds(filterArea.removeFromTop(18));
-                filterResonanceSlider.setBounds(filterArea.removeFromTop(45));
-                filterResonanceValueLabel.setBounds(filterArea);
+            case 1: // LFO Waveform
+                lfoWaveformLabel.setBounds(lfoArea.removeFromTop(14));
+                lfoWaveformSelector.setBounds(lfoArea);
                 break;
-            case 2: // LFO Waveform (integrated with filters)
-                lfoWaveformLabel.setBounds(filterArea.removeFromTop(12));
-                lfoWaveformSelector.setBounds(filterArea);
+            case 2: // LFO Amount
+                lfoAmountLabel.setBounds(lfoArea.removeFromTop(14));
+                lfoAmountSlider.setBounds(lfoArea.removeFromTop(32));
+                lfoAmountValueLabel.setBounds(lfoArea);
                 break;
-            case 3: // LFO Routing (compact)
-                lfoRoutingLabel.setBounds(filterArea.removeFromTop(12));
-                lfoToOsc1Button.setBounds(filterArea.removeFromTop(15));
-                lfoToAmpButton.setBounds(filterArea.removeFromTop(15));
+            case 3: // LFO Routing
+                lfoRoutingLabel.setBounds(lfoArea.removeFromTop(14));
+                lfoToOsc1Button.setBounds(lfoArea.removeFromTop(18));
+                lfoToAmpButton.setBounds(lfoArea.removeFromTop(18));
                 break;
         }
     }
-
-    // LFO controls are now integrated in the filter section above
 }
 
 void MyVST3PluginAudioProcessorEditor::timerCallback()
