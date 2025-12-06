@@ -9,6 +9,7 @@ const juce::String MyVST3PluginAudioProcessor::paramOsc2Frequency = "osc2Frequen
 const juce::String MyVST3PluginAudioProcessor::paramOsc2Detune = "osc2Detune";  // NEW: Detune parameter
 const juce::String MyVST3PluginAudioProcessor::paramOsc1Waveform = "osc1Waveform";  // NEW: Waveform for Osc1
 const juce::String MyVST3PluginAudioProcessor::paramOsc2Waveform = "osc2Waveform";  // NEW: Waveform for Osc2
+const juce::String MyVST3PluginAudioProcessor::paramSquarePWM = "squarePWM";  // NEW: Pulse Width Modulation for square wave
 const juce::String MyVST3PluginAudioProcessor::paramAttack = "attack";
 const juce::String MyVST3PluginAudioProcessor::paramDecay = "decay";
 const juce::String MyVST3PluginAudioProcessor::paramSustain = "sustain";
@@ -49,6 +50,11 @@ const float MyVST3PluginAudioProcessor::osc1WaveformDefault = 0.0f;  // Sine wav
 const float MyVST3PluginAudioProcessor::osc2WaveformMin = 0.0f;
 const float MyVST3PluginAudioProcessor::osc2WaveformMax = 3.0f;
 const float MyVST3PluginAudioProcessor::osc2WaveformDefault = 1.0f;  // Square wave default
+
+// Square PWM parameters (0.1 = 10% duty cycle, 0.9 = 90% duty cycle)
+const float MyVST3PluginAudioProcessor::squarePWMMin = 0.1f;      // 10% minimum
+const float MyVST3PluginAudioProcessor::squarePWMax = 0.9f;       // 90% maximum
+const float MyVST3PluginAudioProcessor::squarePWMDefault = 0.5f;  // 50% default (standard square)
 
 const float MyVST3PluginAudioProcessor::adsrMin = 0.001f;
 const float MyVST3PluginAudioProcessor::adsrMax = 5.0f;
@@ -105,6 +111,8 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
                                                                osc1WaveformMin, osc1WaveformMax, osc1WaveformDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramOsc2Waveform, "Osc2 Waveform",
                                                                osc2WaveformMin, osc2WaveformMax, osc2WaveformDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramSquarePWM, "Square PWM",
+                                                               squarePWMMin, squarePWMax, squarePWMDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramAttack, "Attack",
                                                                adsrMin, adsrMax, attackDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramDecay, "Decay",
@@ -406,10 +414,14 @@ void MyVST3PluginAudioProcessor::updateOscillators()
         oscillator1.setFrequency(osc1Freq);
     }
 
-    // TEST: Only Osc1 waveform update for now
+    // Get Osc1 waveform and PWM
     const auto osc1WaveformParam = parameters.getRawParameterValue(paramOsc1Waveform);
     int osc1Waveform = static_cast<int>(osc1WaveformParam->load());
-    updateOscillatorWaveform(oscillator1, osc1Waveform);
+
+    const auto pwmParam = parameters.getRawParameterValue(paramSquarePWM);
+    float pwmValue = pwmParam->load();
+
+    updateOscillatorWaveform(oscillator1, osc1Waveform, pwmValue);
 
     // Get Osc2 base frequency
     const auto osc2FreqParam = parameters.getRawParameterValue(paramOsc2Frequency);
@@ -428,10 +440,10 @@ void MyVST3PluginAudioProcessor::updateOscillators()
 
     oscillator2.setFrequency(detunedOsc2Freq);
 
-    // TEST: Both waveforms now
+    // Get Osc2 waveform (PWM applies to square waves only)
     const auto osc2WaveformParam = parameters.getRawParameterValue(paramOsc2Waveform);
     int osc2Waveform = static_cast<int>(osc2WaveformParam->load());
-    updateOscillatorWaveform(oscillator2, osc2Waveform);
+    updateOscillatorWaveform(oscillator2, osc2Waveform, pwmValue);
 }
 
 void MyVST3PluginAudioProcessor::updateADSR()
@@ -450,15 +462,20 @@ void MyVST3PluginAudioProcessor::updateADSR()
     adsr.setParameters(adsrParams);
 }
 
-void MyVST3PluginAudioProcessor::updateOscillatorWaveform(juce::dsp::Oscillator<float>& oscillator, int waveformType)
+void MyVST3PluginAudioProcessor::updateOscillatorWaveform(juce::dsp::Oscillator<float>& oscillator, int waveformType, float pwmValue)
 {
     switch (waveformType)
     {
         case 0: // Sine wave
             oscillator.initialise([](float x) { return std::sin(x); }, 128);
             break;
-        case 1: // Square wave
-            oscillator.initialise([](float x) { return x > 0.0f ? 1.0f : -1.0f; }, 128);
+        case 1: // Square wave with PWM
+            oscillator.initialise([pwmValue](float x) {
+                // Normalize phase to 0-1 range
+                float normalizedPhase = std::fmod(x / juce::MathConstants<float>::twoPi, 1.0f);
+                // PWM: high for pwmValue portion of cycle, low for rest
+                return normalizedPhase < pwmValue ? 1.0f : -1.0f;
+            }, 128);
             break;
         case 2: // Saw wave
             oscillator.initialise([](float x) { return x / juce::MathConstants<float>::pi; }, 128);

@@ -111,6 +111,7 @@ public:
     static const juce::String paramOsc2Detune;  // NEW: Detune parameter for Osc2
     static const juce::String paramOsc1Waveform;  // NEW: Waveform selection for Osc1
     static const juce::String paramOsc2Waveform;  // NEW: Waveform selection for Osc2
+    static const juce::String paramSquarePWM;     // NEW: Pulse Width Modulation for square wave
     static const juce::String paramAttack;
     static const juce::String paramDecay;
     static const juce::String paramSustain;
@@ -137,6 +138,11 @@ public:
     static const float osc2WaveformMin;
     static const float osc2WaveformMax;
     static const float osc2WaveformDefault;
+
+    // Square PWM parameters
+    static const float squarePWMMin;
+    static const float squarePWMax;
+    static const float squarePWMDefault;
 
     static const float adsrMin;
     static const float adsrMax;
@@ -185,7 +191,7 @@ private:
     void updateOscillators();
     void updateADSR();
     void updateFilter();
-    void updateOscillatorWaveform(juce::dsp::Oscillator<float>& oscillator, int waveformType);
+    void updateOscillatorWaveform(juce::dsp::Oscillator<float>& oscillator, int waveformType, float pwmValue = 0.5f);
 
     // LFO helper methods
     void updateLFO();
