@@ -53,6 +53,10 @@ private:
     juce::Slider sustainSlider;
     juce::Slider releaseSlider;
 
+    // Filter sliders
+    juce::Slider filterCutoffSlider;
+    juce::Slider filterResonanceSlider;
+
     // Labels
     juce::Label masterVolumeLabel;
     juce::Label osc1FrequencyLabel;
@@ -62,6 +66,10 @@ private:
     juce::Label sustainLabel;
     juce::Label releaseLabel;
 
+    // Filter labels
+    juce::Label filterCutoffLabel;
+    juce::Label filterResonanceLabel;
+
     // Value labels (for displaying current values)
     juce::Label masterVolumeValueLabel;
     juce::Label osc1FrequencyValueLabel;
@@ -70,6 +78,10 @@ private:
     juce::Label decayValueLabel;
     juce::Label sustainValueLabel;
     juce::Label releaseValueLabel;
+
+    // Filter value labels
+    juce::Label filterCutoffValueLabel;
+    juce::Label filterResonanceValueLabel;
 
     // MIDI status display
     juce::Label midiStatusLabel;
@@ -92,6 +104,8 @@ private:
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> decayAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> sustainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> releaseAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterCutoffAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> filterResonanceAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment> testModeAttachment;
 
     //==============================================================================

@@ -135,6 +135,10 @@ private:
     // ADSR envelope
     juce::ADSR adsr;
 
+    // Low-pass filter
+    juce::dsp::IIR::Filter<float> lowPassFilter;
+    juce::dsp::IIR::Filter<float> lowPassFilterR;
+
     // Audio processing state
     double currentSampleRate = 44100.0;
 
@@ -142,6 +146,7 @@ private:
     // Helper methods
     void updateOscillators();
     void updateADSR();
+    void updateFilter();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyVST3PluginAudioProcessor)
 };

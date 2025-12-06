@@ -12,6 +12,10 @@ const juce::String MyVST3PluginAudioProcessor::paramSustain = "sustain";
 const juce::String MyVST3PluginAudioProcessor::paramRelease = "release";
 const juce::String MyVST3PluginAudioProcessor::paramTestMode = "testMode";
 
+// Filter parameters
+const juce::String MyVST3PluginAudioProcessor::paramFilterCutoff = "filterCutoff";
+const juce::String MyVST3PluginAudioProcessor::paramFilterResonance = "filterResonance";
+
 // Parameter ranges
 const float MyVST3PluginAudioProcessor::masterVolumeMin = 0.0f;
 const float MyVST3PluginAudioProcessor::masterVolumeMax = 1.0f;
@@ -30,6 +34,15 @@ const float MyVST3PluginAudioProcessor::sustainDefault = 0.8f;
 const float MyVST3PluginAudioProcessor::releaseDefault = 0.01f;
 const float MyVST3PluginAudioProcessor::testModeDefault = 0.0f;
 
+// Filter parameter ranges
+const float MyVST3PluginAudioProcessor::filterCutoffMin = 20.0f;
+const float MyVST3PluginAudioProcessor::filterCutoffMax = 20000.0f;
+const float MyVST3PluginAudioProcessor::filterCutoffDefault = 10000.0f;
+
+const float MyVST3PluginAudioProcessor::filterResonanceMin = 0.1f;
+const float MyVST3PluginAudioProcessor::filterResonanceMax = 10.0f;
+const float MyVST3PluginAudioProcessor::filterResonanceDefault = 0.707f;
+
 //==============================================================================
 MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -43,6 +56,7 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
         ),
     parameters(*this, nullptr, juce::Identifier("MyVST3Plugin_FINAL"),
                {
+    DBG("MyVST3Plugin: Starting parameter initialization...");
                    std::make_unique<juce::AudioParameterFloat>(paramMasterVolume, "Master Volume",
                                                                masterVolumeMin, masterVolumeMax, masterVolumeDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramOsc1Frequency, "Osc1 Frequency",
@@ -58,7 +72,11 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
                    std::make_unique<juce::AudioParameterFloat>(paramRelease, "Release",
                                                                adsrMin, adsrMax, releaseDefault),
                    std::make_unique<juce::AudioParameterBool>(paramTestMode, "Test Mode",
-                                                              testModeDefault)
+                                                              testModeDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramFilterCutoff, "Filter Cutoff",
+                                                               filterCutoffMin, filterCutoffMax, filterCutoffDefault),
+                   std::make_unique<juce::AudioParameterFloat>(paramFilterResonance, "Filter Resonance",
+                                                               filterResonanceMin, filterResonanceMax, filterResonanceDefault)
                }),
     keyboardState(),
     midiCollector()
@@ -151,6 +169,11 @@ void MyVST3PluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
 
     adsr.setSampleRate(sampleRate);
 
+    // Initialize filters
+    lowPassFilter.prepare(spec);
+    lowPassFilterR.prepare(spec);
+    updateFilter();
+
     currentMidiNote = -1;
     noteOn = false;
 
@@ -224,6 +247,12 @@ void MyVST3PluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
                 float finalSample = (osc1Sample + osc2Sample) * envelopeValue * masterVolume->load();
                 finalSample = juce::jlimit(-0.9f, 0.9f, finalSample);
+
+                // Apply filter
+                if (channel == 0)
+                    finalSample = lowPassFilter.processSample(finalSample);
+                else
+                    finalSample = lowPassFilterR.processSample(finalSample);
 
                 channelData[sample] = finalSample;
             }
@@ -304,6 +333,19 @@ void MyVST3PluginAudioProcessor::updateADSR()
     adsrParams.release = release->load();
 
     adsr.setParameters(adsrParams);
+}
+
+void MyVST3PluginAudioProcessor::updateFilter()
+{
+    const auto cutoff = parameters.getRawParameterValue(paramFilterCutoff);
+    const auto resonance = parameters.getRawParameterValue(paramFilterResonance);
+
+    // Create filter coefficients for low-pass filter
+    juce::dsp::IIR::Coefficients<float>::Ptr coefficients =
+        juce::dsp::IIR::Coefficients<float>::makeLowPass(currentSampleRate, cutoff->load(), resonance->load());
+
+    lowPassFilter.coefficients = coefficients;
+    lowPassFilterR.coefficients = coefficients;
 }
 
 double MyVST3PluginAudioProcessor::midiNoteToFrequency(int midiNote)
