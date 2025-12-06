@@ -56,7 +56,6 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
         ),
     parameters(*this, nullptr, juce::Identifier("MyVST3Plugin_FINAL"),
                {
-    DBG("MyVST3Plugin: Starting parameter initialization...");
                    std::make_unique<juce::AudioParameterFloat>(paramMasterVolume, "Master Volume",
                                                                masterVolumeMin, masterVolumeMax, masterVolumeDefault),
                    std::make_unique<juce::AudioParameterFloat>(paramOsc1Frequency, "Osc1 Frequency",
