@@ -3,6 +3,7 @@
 #include "SynthVoice.h"
 
 //==============================================================================
+// Costruttore: uscite stereo e 8 voci di sintesi polifoniche.
 MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
     : AudioProcessor (BusesProperties()
                           .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
@@ -15,6 +16,7 @@ MyVST3PluginAudioProcessor::MyVST3PluginAudioProcessor()
 
 MyVST3PluginAudioProcessor::~MyVST3PluginAudioProcessor() = default;
 
+// Definizione dei parametri esposti all'host.
 juce::AudioProcessorValueTreeState::ParameterLayout MyVST3PluginAudioProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> p;
@@ -22,28 +24,35 @@ juce::AudioProcessorValueTreeState::ParameterLayout MyVST3PluginAudioProcessor::
     using APC = juce::AudioParameterChoice;
     auto id = [] (const char* s) { return juce::ParameterID (s, 1); };
 
+    // Forme d'onda disponibili per entrambi gli oscillatori.
     juce::StringArray waves { "Sine", "Square", "Saw", "Triangle" };
+    // Destinazioni modulabili dal LFO.
     juce::StringArray lfoTargets { "Pitch", "Filter", "Amp" };
 
+    // --- Oscillatori ---
     p.push_back (std::make_unique<APC> (id ("osc1Wave"), "Osc1 Wave", waves, 0));
     p.push_back (std::make_unique<APC> (id ("osc2Wave"), "Osc2 Wave", waves, 2));
     p.push_back (std::make_unique<APF> (id ("osc1Level"), "Osc1 Level", juce::NormalisableRange<float> (0.0f, 1.0f), 0.8f));
     p.push_back (std::make_unique<APF> (id ("osc2Level"), "Osc2 Level", juce::NormalisableRange<float> (0.0f, 1.0f), 0.6f));
     p.push_back (std::make_unique<APF> (id ("osc2Detune"), "Osc2 Detune (cents)", juce::NormalisableRange<float> (-50.0f, 50.0f), 5.0f));
 
+    // --- Inviluppo ADSR (tempi in secondi, sustain in frazione lineare) ---
     p.push_back (std::make_unique<APF> (id ("attack"), "Attack", juce::NormalisableRange<float> (0.001f, 2.0f, 0.0f, 0.35f), 0.01f));
     p.push_back (std::make_unique<APF> (id ("decay"), "Decay", juce::NormalisableRange<float> (0.001f, 2.0f, 0.0f, 0.35f), 0.2f));
     p.push_back (std::make_unique<APF> (id ("sustain"), "Sustain", juce::NormalisableRange<float> (0.0f, 1.0f), 0.7f));
     p.push_back (std::make_unique<APF> (id ("release"), "Release", juce::NormalisableRange<float> (0.001f, 4.0f, 0.0f, 0.35f), 0.3f));
 
+    // --- Filtro lowpass: cutoff in Hz, risonanza e quantita di inviluppo ---
     p.push_back (std::make_unique<APF> (id ("cutoff"), "Filter Cutoff", juce::NormalisableRange<float> (20.0f, 18000.0f, 0.0f, 0.3f), 8000.0f));
     p.push_back (std::make_unique<APF> (id ("resonance"), "Filter Resonance", juce::NormalisableRange<float> (0.0f, 1.0f), 0.2f));
     p.push_back (std::make_unique<APF> (id ("filterEnv"), "Filter Env Amount", juce::NormalisableRange<float> (0.0f, 8000.0f, 0.0f, 0.35f), 0.0f));
 
+    // --- LFO ---
     p.push_back (std::make_unique<APF> (id ("lfoRate"), "LFO Rate", juce::NormalisableRange<float> (0.1f, 20.0f, 0.0f, 0.35f), 2.0f));
     p.push_back (std::make_unique<APF> (id ("lfoDepth"), "LFO Depth", juce::NormalisableRange<float> (0.0f, 1.0f), 0.0f));
     p.push_back (std::make_unique<APC> (id ("lfoTarget"), "LFO Target", lfoTargets, 1));
 
+    // --- Uscita ---
     p.push_back (std::make_unique<APF> (id ("gain"), "Master Gain", juce::NormalisableRange<float> (0.0f, 1.0f), 0.7f));
 
     return { p.begin(), p.end() };
@@ -53,6 +62,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MyVST3PluginAudioProcessor::
 void MyVST3PluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     synth.setCurrentPlaybackSampleRate (sampleRate);
+    // Ogni voce riceve sample rate e numero di canali d'uscita.
     for (int i = 0; i < synth.getNumVoices(); ++i)
         if (auto* v = dynamic_cast<SynthVoice*> (synth.getVoice (i)))
             v->prepareToPlay (sampleRate, samplesPerBlock, getTotalNumOutputChannels());
@@ -62,6 +72,7 @@ void MyVST3PluginAudioProcessor::releaseResources()
 {
 }
 
+// Supporto bus: solo mono o stereo.
 bool MyVST3PluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
@@ -75,6 +86,7 @@ void MyVST3PluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     juce::ScopedNoDenormals noDenormals;
     buffer.clear();
 
+    // Aggiorna lo stato della tastiera virtuale, poi fa suonare il synth.
     keyboardState.processNextMidiBuffer (midiMessages, 0, buffer.getNumSamples(), true);
     synth.renderNextBlock (buffer, midiMessages, 0, buffer.getNumSamples());
 }
@@ -101,6 +113,7 @@ const juce::String MyVST3PluginAudioProcessor::getProgramName (int) { return {};
 void MyVST3PluginAudioProcessor::changeProgramName (int, const juce::String&) {}
 
 //==============================================================================
+// Serializzazione: i parametri vengono salvati come XML dentro il preset.
 void MyVST3PluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     if (auto xml = parameters.copyState().createXml())
@@ -115,6 +128,7 @@ void MyVST3PluginAudioProcessor::setStateInformation (const void* data, int size
 }
 
 //==============================================================================
+// Entry point richiesto dal framework JUCE per istanziare il plugin.
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new MyVST3PluginAudioProcessor();
