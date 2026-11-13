@@ -5,8 +5,11 @@ Write-Host "Installing MyVST3Plugin to local VST3 directory..." -ForegroundColor
 
 $localVst3Dir = "$env:USERPROFILE\Documents\REAPER\UserPlugins"
 $candidates = @(
+    "build_vs\MyVST3Plugin_artefacts\Release\VST3\MyVST3Plugin.vst3",
     "build\MyVST3Plugin_artefacts\Release\VST3\MyVST3Plugin.vst3",
+    "build_vs\MyVST3Plugin_artefacts\Debug\VST3\MyVST3Plugin.vst3",
     "build\MyVST3Plugin_artefacts\Debug\VST3\MyVST3Plugin.vst3",
+    "build_vs\MyVST3Plugin_artefacts\VST3\MyVST3Plugin.vst3",
     "build\MyVST3Plugin_artefacts\VST3\MyVST3Plugin.vst3"
 )
 

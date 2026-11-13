@@ -18,8 +18,8 @@ inline double blep (double t)
     return 2.0 * t - t * t - 1.0;
 }
 
-/** Singola voce polifonica: due oscillatori, inviluppo ADSR, filtro lowpass
- *  e LFO instradabile su pitch, filtro o ampiezza. */
+/** Singola voce polifonica. Con unisono > 1 somma internamente N oscillatori
+ *  detunati per onda (centrati sulla nota base), simulando un coro di voci. */
 class SynthVoice : public juce::SynthesiserVoice
 {
 public:
@@ -30,21 +30,22 @@ public:
         return dynamic_cast<SynthSound*> (sound) != nullptr;
     }
 
-    // Nota premuta: reset delle fasi, lettura dei parametri e avvio ADSR.
     void startNote (int midiNoteNumber, float velocity, juce::SynthesiserSound*, int) override
     {
         currentNote = midiNoteNumber;
         level = juce::jlimit (0.0f, 1.0f, velocity);
         frequency = juce::MidiMessage::getMidiNoteInHertz (midiNoteNumber);
-        phase1 = 0.0;
-        phase2 = 0.0;
         lfoPhase = 0.0;
 
+        // Legge i parametri PRIMA di dimensionare le fasi: unisonCount
+        // determina quante fasi servono, altrimenti si scrive fuori range.
         updateParams();
         adsr.noteOn();
+
+        unisonPhase1.assign (static_cast<size_t> (unisonCount), 0.0);
+        unisonPhase2.assign (static_cast<size_t> (unisonCount), 0.0);
     }
 
-    // Nota rilasciata: coda di rilascio oppure arresto immediato della voce.
     void stopNote (float, bool allowTailOff) override
     {
         if (allowTailOff)
@@ -56,17 +57,15 @@ public:
         }
     }
 
-    // Pitch bend e controller non gestiti.
     void pitchWheelMoved (int) override {}
     void controllerMoved (int, int) override {}
 
-    /** Prepara ADSR, filtro e smoothed-value con il sample rate corrente. */
     void prepareToPlay (double sampleRate, int, int)
     {
         currentSampleRate = sampleRate;
         adsr.setSampleRate (sampleRate);
 
-        const double tail = 0.05; // 50 ms di smoothing sui parametri variabili
+        const double tail = 0.05;
         smoothCutoff.reset (sampleRate, tail);
         smoothResonance.reset (sampleRate, tail);
         smoothOsc1Level.reset (sampleRate, tail);
@@ -83,7 +82,6 @@ public:
         updateParams();
     }
 
-    // Rendering voce per campione: oscillatori -> filtro -> inviluppo -> uscita.
     void renderNextBlock (juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override
     {
         if (! isVoiceActive())
@@ -91,41 +89,59 @@ public:
 
         updateParams();
 
+        // Numero di oscillatori unisono effettivamente allocati.
+        const int voices = static_cast<int> (unisonPhase1.size());
+
+        if (voices <= 0)
+            return;
+
         auto* outL = outputBuffer.getWritePointer (0, startSample);
         auto* outR = outputBuffer.getNumChannels() > 1 ? outputBuffer.getWritePointer (1, startSample) : nullptr;
-
-        const double dp1 = (2.0 * juce::MathConstants<double>::pi * frequency) / currentSampleRate;
-        const double dpNorm1 = dp1 / (2.0 * juce::MathConstants<double>::pi); // passo normalizzato 0..1
 
         for (int i = 0; i < numSamples; ++i)
         {
             if (currentSampleRate <= 0.0)
                 break;
 
-            // LFO sinusoidale normalizzato in [-1, 1].
             const float lfo = static_cast<float> (std::sin (lfoPhase)) * smoothLfoDepth.getNextValue();
             lfoPhase += (2.0 * juce::MathConstants<double>::pi * lfoRate) / currentSampleRate;
             if (lfoPhase >= 2.0 * juce::MathConstants<double>::pi)
                 lfoPhase -= 2.0 * juce::MathConstants<double>::pi;
 
-            // Frequenza osc2: detune + eventuale LFO su pitch.
-            const double freqMod = frequency * std::pow (2.0, (static_cast<double> (osc2DetuneCents) / 1200.0) + (lfoToPitch ? static_cast<double> (lfo) * 0.05 : 0.0));
-            const double dp2 = (2.0 * juce::MathConstants<double>::pi * freqMod) / currentSampleRate;
-            const double dpNorm2 = dp2 / (2.0 * juce::MathConstants<double>::pi);
+            float sum = 0.0f;
+            const float osc1L = smoothOsc1Level.getNextValue();
+            const float osc2L = smoothOsc2Level.getNextValue();
 
-            const float s1 = oscSampleBandLimited (phase1, osc1Wave, dpNorm1) * smoothOsc1Level.getNextValue();
-            const float s2 = oscSampleBandLimited (phase2, osc2Wave, dpNorm2) * smoothOsc2Level.getNextValue();
-            float sample = (s1 + s2) * 0.5f;
+            for (int u = 0; u < voices; ++u)
+            {
+                // Detune centrato: voci distribuite simmetricamente attorno alla nota base.
+                const double detuneCents = (voices > 1)
+                    ? (static_cast<double> (u) - (voices - 1) / 2.0) * unisonDetuneCents
+                    : 0.0;
+                const double detuneRatio = std::pow (2.0, detuneCents / 1200.0);
 
-            advancePhase (phase1, dp1);
-            advancePhase (phase2, dp2);
+                const double freqU = frequency * detuneRatio;
+                const double dp1 = (2.0 * juce::MathConstants<double>::pi * freqU) / currentSampleRate;
+                const double dpNorm1 = dp1 / (2.0 * juce::MathConstants<double>::pi);
 
-            // Inviluppo: usato sia per l'ampiezza sia per il filtro.
+                const double freqMod = freqU * std::pow (2.0, (static_cast<double> (osc2DetuneCents) / 1200.0) + (lfoToPitch ? static_cast<double> (lfo) * 0.05 : 0.0));
+                const double dp2 = (2.0 * juce::MathConstants<double>::pi * freqMod) / currentSampleRate;
+                const double dpNorm2 = dp2 / (2.0 * juce::MathConstants<double>::pi);
+
+                const float s1 = oscSampleBandLimited (unisonPhase1[u], osc1Wave, dpNorm1) * osc1L;
+                const float s2 = oscSampleBandLimited (unisonPhase2[u], osc2Wave, dpNorm2) * osc2L;
+                sum += (s1 + s2) * 0.5f;
+
+                advancePhase (unisonPhase1[u], dp1);
+                advancePhase (unisonPhase2[u], dp2);
+            }
+
+            float sample = sum / static_cast<float> (voices);
+
             float env = adsr.getNextSample();
             if (lfoToAmp)
                 sample *= juce::jlimit (0.0f, 2.0f, 1.0f + lfo);
 
-            // Modulazione del filtro: LFO e inviluppo sommati al cutoff.
             auto cutoff = smoothCutoff.getNextValue();
             if (lfoToFilter)
                 cutoff = juce::jlimit (20.0f, 18000.0f, cutoff * (1.0f + lfo * 0.5f));
@@ -140,7 +156,6 @@ public:
             if (outR != nullptr)
                 outR[i] += out;
 
-            // Fine inviluppo: libera la voce.
             if (! adsr.isActive())
             {
                 clearCurrentNote();
@@ -150,49 +165,42 @@ public:
     }
 
 private:
-    /** Campione oscillatore anti-aliased dato fase (0..2pi), tipo d'onda e passo normalizzato. */
     static float oscSampleBandLimited (double phase, int wave, double dpNorm)
     {
         const auto twoPi = 2.0 * juce::MathConstants<double>::pi;
-        const double t = phase / twoPi; // posizione nel ciclo 0..1
+        const double t = phase / twoPi;
 
         switch (wave)
         {
-            case 0: // Sine
+            case 0:
                 return static_cast<float> (std::sin (phase));
 
-            case 1: // Square anti-aliased (PolyBLEP)
+            case 1:
             {
                 float v = t < 0.5 ? 1.0f : -1.0f;
-                // Salto discendente a t = 0.5
                 if (t < 0.5 && t + dpNorm >= 0.5)
                     v -= static_cast<float> (2.0 * blep (t + dpNorm - 0.5));
-                // Salto ascendente al wrap t = 1 -> 0
                 if (t + dpNorm >= 1.0)
                     v += static_cast<float> (2.0 * blep (t + dpNorm - 1.0));
                 return v;
             }
 
-            case 2: // Saw anti-aliased (PolyBLEP)
+            case 2:
             {
                 float v = static_cast<float> (2.0 * t - 1.0);
-                // Salto al wrap t = 1 -> 0
                 if (t + dpNorm >= 1.0)
                     v += static_cast<float> (2.0 * blep (t + dpNorm - 1.0));
                 return v;
             }
 
-            case 3: // Triangle (già senza salti discontinui)
-            {
+            case 3:
                 return static_cast<float> (2.0 * std::abs (2.0 * t - 1.0) - 1.0);
-            }
 
             default:
                 return static_cast<float> (std::sin (phase));
         }
     }
 
-    /** Incrementa la fase di dp e la mantiene in [0, 2pi). */
     static void advancePhase (double& phase, double dp)
     {
         phase += dp;
@@ -201,7 +209,6 @@ private:
             phase -= twoPi;
     }
 
-    /** Copia i valori correnti dei parametri nelle variabili della voce (target per lo smoothing). */
     void updateParams()
     {
         auto get = [this] (const char* id) { return params.getRawParameterValue (id)->load(); };
@@ -209,8 +216,9 @@ private:
         osc1Wave = static_cast<int> (get ("osc1Wave"));
         osc2Wave = static_cast<int> (get ("osc2Wave"));
         osc2DetuneCents = get ("osc2Detune");
+        unisonCount = juce::jlimit (1, 8, static_cast<int> (get ("unisonCount")));
+        unisonDetuneCents = get ("unisonDetune");
 
-        // Target per lo smoothing (il valore effettivo viene letto nel loop via getNextValue()).
         smoothOsc1Level.setTargetValue (get ("osc1Level"));
         smoothOsc2Level.setTargetValue (get ("osc2Level"));
 
@@ -239,22 +247,22 @@ private:
     juce::ADSR adsr;
     juce::dsp::StateVariableTPTFilter<float> filter;
 
-    // Stato della voce.
     double currentSampleRate = 44100.0;
     double frequency = 440.0;
-    double phase1 = 0.0;
-    double phase2 = 0.0;
     double lfoPhase = 0.0;
     float level = 0.0f;
     int currentNote = -1;
 
-    // Parametri non-smoothed (cambiati solo a inizio nota o raramente).
     int osc1Wave = 0, osc2Wave = 2;
     float osc2DetuneCents = 5.0f;
     float lfoRate = 2.0f;
+    int unisonCount = 2;
+    float unisonDetuneCents = 7.0f;
     bool lfoToPitch = false, lfoToFilter = true, lfoToAmp = false;
 
-    // Valori parametri con smoothing applicato per campione.
+    std::vector<double> unisonPhase1;
+    std::vector<double> unisonPhase2;
+
     juce::SmoothedValue<float> smoothOsc1Level;
     juce::SmoothedValue<float> smoothOsc2Level;
     juce::SmoothedValue<float> smoothCutoff;

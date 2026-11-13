@@ -19,21 +19,21 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo [2/4] Configuring (CMake)...
-if not exist build mkdir build
-cmake -S . -B build -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release
+echo [2/4] Configuring (CMake + Visual Studio 2022)...
+if not exist build_vs mkdir build_vs
+cmake -S . -B build_vs -G "Visual Studio 17 2022" -A x64
 if errorlevel 1 (
   echo ERROR: CMake configure failed.
   exit /b 1
 )
 
-echo [3/4] Building...
-cmake --build build --config Release --parallel
+echo [3/4] Building (Release)...
+cmake --build build_vs --config Release --parallel
 if errorlevel 1 (
   echo ERROR: Build failed.
   exit /b 1
 )
 
 echo [4/4] Done.
-echo Built artifacts are under: build\MyVST3Plugin_artefacts\
+echo Built artifacts are under: build_vs\MyVST3Plugin_artefacts\Release\
 endlocal

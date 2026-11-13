@@ -1,5 +1,7 @@
 build/
 build_nmake/
+build_vs/
+build_kilo/
 *.exe
 *.vst3
 .kilo/

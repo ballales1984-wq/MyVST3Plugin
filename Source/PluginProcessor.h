@@ -5,6 +5,7 @@
 /**
  * Processore audio del plugin: possiede il sintetizzatore, il ValueTreeState
  * dei parametri esposti all'host e la tastiera MIDI usata dall'editor.
+ * Include una catena di effetti: EQ 3 bande, Delay stereo, Riverbero.
  */
 class MyVST3PluginAudioProcessor : public juce::AudioProcessor
 {
@@ -58,6 +59,36 @@ private:
     /** Definisce id, nome, range e valore di default di ogni parametro. */
     juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::Synthesiser synth;
+
+    // --- Catena effetti ---
+    void prepareEffects (double sampleRate, int samplesPerBlock);
+    void processEffects (juce::AudioBuffer<float>& buffer);
+
+    /** EQ 3 bande: low shelf, mid peak, high shelf. */
+    struct EqBand
+    {
+        juce::dsp::IIR::Filter<float> filter;
+
+        void prepare (double sampleRate);
+        void setLowShelf  (double sampleRate, float freq, float gainDb);
+        void setPeak      (double sampleRate, float freq, float gainDb, float q);
+        void setHighShelf (double sampleRate, float freq, float gainDb);
+    };
+
+    EqBand eqLow, eqMid, eqHigh;
+
+    /** Delay stereo con feedback e cross-feedback per width. */
+    juce::dsp::DelayLine<float> delayL, delayR;
+    float delayFeedback = 0.3f;
+    float delayMix = 0.0f;
+    float delayTimeSamples = 0.0f;
+    int maxDelaySamples = 96000; // ~2s a 48kHz
+
+    /** Riverbero Schroeder (JUCE Reverb). */
+    juce::Reverb reverb;
+    float reverbMix = 0.0f;
+
+    double currentSampleRate = 44100.0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyVST3PluginAudioProcessor)
 };
