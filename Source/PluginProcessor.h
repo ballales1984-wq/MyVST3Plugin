@@ -2,7 +2,6 @@
 
 #include <JuceHeader.h>
 
-//==============================================================================
 class MyVST3PluginAudioProcessor : public juce::AudioProcessor
 {
 public:
@@ -13,6 +12,7 @@ public:
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     //==============================================================================
@@ -39,15 +39,11 @@ public:
 
     //==============================================================================
     juce::AudioProcessorValueTreeState parameters;
+    juce::MidiKeyboardState keyboardState;
 
 private:
-    //==============================================================================
-    juce::MidiKeyboardState keyboardState;
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::Synthesiser synth;
-
-    // MIDI processing
-    int currentMidiNote = -1;
-    bool noteOn = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyVST3PluginAudioProcessor)
 };

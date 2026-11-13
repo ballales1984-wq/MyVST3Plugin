@@ -1,18 +1,27 @@
-# MyVST3Plugin - Professional Dual Oscillator Synthesizer
+# MyVST3Plugin - Dual Oscillator Synthesizer (VST3)
 
-A powerful and versatile VST3 synthesizer plugin built with JUCE framework, featuring dual oscillators, ADSR envelope, and advanced filtering capabilities.
+JUCE-based VST3/Standalone synthesizer.
 
-## Features
-- Dual Oscillators (Sine/Square/Saw/Triangle)
-- ADSR Envelope
-- Low-Pass Filter with resonance
-- LFO Modulation
-- MIDI Support
-- Virtual Keyboard
+## Current Features
+- Dual oscillators (Sine/Square/Saw/Triangle)
+- ADSR envelope
+- Low-pass ladder filter with resonance + envelope amount
+- LFO with depth and target (Pitch/Filter/Amp)
+- MIDI input + virtual keyboard
+- Master gain
+- State save/restore via APVTS
 
-## Quick Start
-1. .\quick_build.bat - Build the plugin
-2. .\install_vst3_local.ps1 - Install for Reaper
-3. Load 'MyVST3Plugin' in your DAW
+## Build (Windows, MSVC)
+```bat
+.\quick_build.bat
+```
 
-*Clean repository - no build files*
+## Install (Reaper, local user)
+```powershell
+.\install_vst3_local.ps1
+```
+
+## Standalone quick test
+```bat
+.\test_plugin.bat
+```
