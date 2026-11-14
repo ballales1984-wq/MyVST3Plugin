@@ -49,23 +49,10 @@ void SynthLookAndFeel::drawRotarySlider (juce::Graphics& g,
                                           float rotaryEndAngle,
                                           juce::Slider& slider)
 {
-    // Determina il colore di sezione basandosi sul nome del parametro
+    // Colore di sezione: lo assegna l'editor al parametro, non si deduce dal nome.
     juce::Colour accent = accentWhite;
-    auto name = slider.getName();
-    if (name.containsIgnoreCase ("Osc") || name.containsIgnoreCase ("Detune"))
-        accent = accentOrange;
-    else if (name.containsIgnoreCase ("cut") || name.containsIgnoreCase ("res") || name.containsIgnoreCase ("F.Env"))
-        accent = accentCyan;
-    else if (name.containsIgnoreCase ("A") || name.containsIgnoreCase ("D") || name.containsIgnoreCase ("S") || name.containsIgnoreCase ("R")
-          || name.containsIgnoreCase ("Low") || name.containsIgnoreCase ("Mid") || name.containsIgnoreCase ("High"))
-        accent = accentGreen;
-    else if (name.containsIgnoreCase ("Rate") || name.containsIgnoreCase ("Depth")
-          || name.containsIgnoreCase ("Target") || name.containsIgnoreCase ("Size") || name.containsIgnoreCase ("Damp") || name.containsIgnoreCase ("Mix"))
-        accent = accentPurple;
-    else if (name.containsIgnoreCase ("Time") || name.containsIgnoreCase ("Fdbk"))
-        accent = accentOrange;
-    else if (name.containsIgnoreCase ("Gain"))
-        accent = accentWhite;
+    if (auto* accentVar = slider.getProperties().getVarPointer ("accent"))
+        accent = juce::Colour (static_cast<juce::uint32> (static_cast<int> (*accentVar)));
 
     // Area del knob (ridotta)
     auto bounds = juce::Rectangle<int> (x, y, width, height).toFloat().reduced (6);

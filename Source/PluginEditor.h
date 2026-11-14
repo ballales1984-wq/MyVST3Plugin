@@ -4,6 +4,7 @@
 #include "PresetManager.h"
 #include "SynthLookAndFeel.h"
 #include <JuceHeader.h>
+#include <unordered_map>
 
 /** Interfaccia grafica: controlli rotativi, selettori di forma d'onda,
  *  selettore del target del LFO, tastiera MIDI a video (disegnata
@@ -60,6 +61,8 @@ private:
     // Selettori di forma d'onda e destinazione del LFO.
     juce::ComboBox osc1Wave, osc2Wave, lfoTarget;
     juce::Slider osc1Level, osc2Level, osc2Detune;
+    // Unisono: numero di voci e loro spaziatura in cent.
+    juce::Slider unisonCount, unisonDetune;
     // Inviluppo ADSR.
     juce::Slider attack, decay, sustain, release;
     // Filtro e LFO.
@@ -79,6 +82,10 @@ private:
 
     std::vector<std::unique_ptr<SliderAtt>> sliderAtts;
     std::vector<std::unique_ptr<ComboAtt>> comboAtts;
+
+    // Etichette con il nome del parametro, posizionate sopra ogni knob.
+    std::vector<std::unique_ptr<juce::Label>> knobLabels;
+    std::unordered_map<juce::Component*, juce::Label*> knobLabelFor;
 
     /** Crea uno slider rotativo con etichetta e lo connette al parametro. */
     void setupSlider (juce::Slider& s, const juce::String& name, const char* paramId);

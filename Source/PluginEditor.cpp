@@ -99,40 +99,47 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     setupCombo (lfoTarget, targets, "lfoTarget");
 
     // Sezione oscillatori.
-    setupSlider (osc1Level, "Osc1", "osc1Level");
-    setupSlider (osc2Level, "Osc2", "osc2Level");
-    setupSlider (osc2Detune, "Detune", "osc2Detune");
+    setupSlider (osc1Level, "OSC 1 LEVEL", "osc1Level");
+    setupSlider (osc2Level, "OSC 2 LEVEL", "osc2Level");
+    setupSlider (osc2Detune, "DETUNE", "osc2Detune");
+
+    // Unisono: voci e spaziatura.
+    setupSlider (unisonCount, "UNISON", "unisonCount");
+    setupSlider (unisonDetune, "SPREAD", "unisonDetune");
 
     // Sezione inviluppo ADSR.
-    setupSlider (attack, "A", "attack");
-    setupSlider (decay, "D", "decay");
-    setupSlider (sustain, "S", "sustain");
-    setupSlider (release, "R", "release");
+    setupSlider (attack, "ATTACK", "attack");
+    setupSlider (decay, "DECAY", "decay");
+    setupSlider (sustain, "SUSTAIN", "sustain");
+    setupSlider (release, "RELEASE", "release");
 
     // Sezione filtro.
-    setupSlider (cutoff, "Cutoff", "cutoff");
-    setupSlider (resonance, "Res", "resonance");
-    setupSlider (filterEnv, "F.Env", "filterEnv");
+    setupSlider (cutoff, "CUTOFF", "cutoff");
+    setupSlider (resonance, "RESONANCE", "resonance");
+    setupSlider (filterEnv, "ENV AMOUNT", "filterEnv");
 
     // Sezione LFO e uscita.
-    setupSlider (lfoRate, "Rate", "lfoRate");
-    setupSlider (lfoDepth, "Depth", "lfoDepth");
-    setupSlider (gain, "Gain", "gain");
+    setupSlider (lfoRate, "LFO RATE", "lfoRate");
+    setupSlider (lfoDepth, "LFO DEPTH", "lfoDepth");
+    setupSlider (gain, "OUTPUT GAIN", "gain");
 
     // EQ 3 bande
-    setupSlider (eqLow, "Low", "eqLow");
-    setupSlider (eqMid, "Mid", "eqMid");
-    setupSlider (eqHigh, "High", "eqHigh");
+    setupSlider (eqLow, "EQ LOW", "eqLow");
+    setupSlider (eqMid, "EQ MID", "eqMid");
+    setupSlider (eqHigh, "EQ HIGH", "eqHigh");
 
     // Delay
-    setupSlider (delayTime, "Time", "delayTime");
-    setupSlider (delayFeedback, "Fdbk", "delayFeedback");
-    setupSlider (delayMix, "Mix", "delayMix");
+    setupSlider (delayTime, "DELAY TIME", "delayTime");
+    setupSlider (delayFeedback, "FEEDBACK", "delayFeedback");
+    setupSlider (delayMix, "DELAY MIX", "delayMix");
 
     // Riverbero
-    setupSlider (reverbSize, "Size", "reverbSize");
-    setupSlider (reverbDamping, "Damp", "reverbDamping");
-    setupSlider (reverbMix, "Mix", "reverbMix");
+    setupSlider (reverbSize, "REVERB SIZE", "reverbSize");
+    setupSlider (reverbDamping, "DAMPING", "reverbDamping");
+    setupSlider (reverbMix, "REVERB MIX", "reverbMix");
+
+    // I controlli sono stati creati: ricalcola i bounds una prima volta.
+    resized();
 
     startTimerHz (30);
 }
@@ -227,6 +234,38 @@ void MyVST3PluginAudioProcessorEditor::setupSlider (juce::Slider& s, const juce:
     s.setName (name);
     addAndMakeVisible (s);
     sliderAtts.push_back (std::make_unique<SliderAtt> (audioProcessor.parameters, paramId, s));
+
+    // Colore di sezione dedotto dal parametro (non dal nome mostrato).
+    const juce::String id (paramId);
+    juce::Colour accent = synthLnf.accentWhite;
+    if (id.startsWith ("osc") || id == "unisonCount" || id == "unisonDetune")
+        accent = synthLnf.accentOrange;
+    else if (id == "cutoff" || id == "resonance" || id == "filterEnv")
+        accent = synthLnf.accentCyan;
+    else if (id == "attack" || id == "decay" || id == "sustain" || id == "release")
+        accent = synthLnf.accentGreen;
+    else if (id.startsWith ("eq"))
+        accent = synthLnf.accentGreen;
+    else if (id == "lfoRate" || id == "lfoDepth" || id == "gain")
+        accent = synthLnf.accentPurple;
+    else if (id.startsWith ("delay"))
+        accent = synthLnf.accentOrange;
+    else if (id.startsWith ("reverb"))
+        accent = synthLnf.accentPurple;
+    s.getProperties().set ("accent", static_cast<int> (accent.getARGB()));
+
+    // Etichetta con il nome del parametro, mostrata sopra il knob.
+    auto label = std::make_unique<juce::Label>();
+    label->setText (name, juce::dontSendNotification);
+    label->setFont (juce::Font ("Segoe UI", 10.0f, juce::Font::bold));
+    label->setColour (juce::Label::textColourId, synthLnf.textPrimary);
+    label->setColour (juce::Label::backgroundColourId, juce::Colours::transparentBlack);
+    label->setColour (juce::Label::outlineColourId, juce::Colours::transparentBlack);
+    label->setJustificationType (juce::Justification::centred);
+    label->setEditable (false, false, false);
+    addAndMakeVisible (*label);
+    knobLabelFor[&s] = label.get();
+    knobLabels.push_back (std::move (label));
 }
 
 // Combo box con elenco di voci e attachment al parametro.
@@ -538,12 +577,18 @@ void MyVST3PluginAudioProcessorEditor::resized()
         presetBox.setBounds          (bar.reduced (2.0f).toNearestInt());
     }
 
-    auto placeRow = [] (juce::Rectangle<float> r, std::initializer_list<juce::Component*> comps) {
+    auto placeRow = [this] (juce::Rectangle<float> r, std::initializer_list<juce::Component*> comps) {
         const int n = static_cast<int>(comps.size());
         const float w = r.getWidth() / static_cast<float>(n);
         for (auto* c : comps)
         {
-            c->setBounds (r.removeFromLeft (w).reduced (4.0f).toNearestInt());
+            auto cell = r.removeFromLeft (w).reduced (4.0f);
+
+            // Nome del parametro sopra il knob.
+            if (auto it = knobLabelFor.find (c); it != knobLabelFor.end())
+                it->second->setBounds (cell.removeFromTop (16.0f).toNearestInt());
+
+            c->setBounds (cell.toNearestInt());
         }
     };
 
@@ -565,7 +610,11 @@ void MyVST3PluginAudioProcessorEditor::resized()
         osc2WaveLabel.setBounds (comboRow.removeFromLeft (34.0f).reduced (2.0f).toNearestInt());
         osc2Wave.setBounds (comboRow.reduced (2.0f).toNearestInt());
 
-        placeRow (col, { &osc1Level, &osc2Level, &osc2Detune });
+        auto oscKnobRow = col.removeFromTop (col.getHeight() * 0.5f);
+        placeRow (oscKnobRow, { &osc1Level, &osc2Level, &osc2Detune });
+
+        // Seconda fila: unisono e spaziatura.
+        placeRow (col, { &unisonCount, &unisonDetune });
     }
 
     // Colonna 2: Envelope + Filtro
