@@ -116,10 +116,17 @@ void MyVST3PluginAudioProcessor::EqBand::prepare (double sampleRate)
 
     filter.prepare (spec);
     filter.reset();
+    appliedGainDb = 1.0e9f;
+    appliedFs = 0.0;
 }
 
 void MyVST3PluginAudioProcessor::EqBand::setLowShelf (double sampleRate, float freq, float gainDb)
 {
+    if (gainDb == appliedGainDb && sampleRate == appliedFs)
+        return;
+    appliedGainDb = gainDb;
+    appliedFs = sampleRate;
+
     const double Q = 0.707;
     const double A = std::pow (10.0, gainDb * 0.05);
     const double w0 = 2.0 * juce::MathConstants<double>::pi * freq / sampleRate;
@@ -141,6 +148,11 @@ void MyVST3PluginAudioProcessor::EqBand::setLowShelf (double sampleRate, float f
 
 void MyVST3PluginAudioProcessor::EqBand::setPeak (double sampleRate, float freq, float gainDb, float q)
 {
+    if (gainDb == appliedGainDb && sampleRate == appliedFs)
+        return;
+    appliedGainDb = gainDb;
+    appliedFs = sampleRate;
+
     const double A = std::pow (10.0, gainDb * 0.05);
     const double w0 = 2.0 * juce::MathConstants<double>::pi * freq / sampleRate;
     const double alpha = std::sin (w0) / (2.0 * q);
@@ -160,6 +172,11 @@ void MyVST3PluginAudioProcessor::EqBand::setPeak (double sampleRate, float freq,
 
 void MyVST3PluginAudioProcessor::EqBand::setHighShelf (double sampleRate, float freq, float gainDb)
 {
+    if (gainDb == appliedGainDb && sampleRate == appliedFs)
+        return;
+    appliedGainDb = gainDb;
+    appliedFs = sampleRate;
+
     const double Q = 0.707;
     const double A = std::pow (10.0, gainDb * 0.05);
     const double w0 = 2.0 * juce::MathConstants<double>::pi * freq / sampleRate;
@@ -204,6 +221,17 @@ void MyVST3PluginAudioProcessor::prepareEffects (double sampleRate, int samplesP
     // Reverb
     reverb.setSampleRate (sampleRate);
     reverb.setParameters (juce::Reverb::Parameters());
+
+    // Smoothing FX (anti-zipper)
+    delayMixSmooth.reset (sampleRate, 0.02f);
+    delayFeedbackSmooth.reset (sampleRate, 0.02f);
+    delayMixSmooth.setCurrentAndTargetValue (0.0f);
+    delayFeedbackSmooth.setCurrentAndTargetValue (0.0f);
+    eqLowSmoothDb = eqMidSmoothDb = eqHighSmoothDb = 0.0f;
+    reverbMixSmooth = 0.0f;
+    reverbSizeSmooth = 0.5f;
+    reverbDampSmooth = 0.5f;
+    delayTimeSmooth = 0.0f;
 }
 
 // =============================================================================
@@ -217,15 +245,17 @@ void MyVST3PluginAudioProcessor::processEffects (juce::AudioBuffer<float>& buffe
     // Leggi parametri
     auto getParam = [this] (const char* id) { return parameters.getRawParameterValue (id)->load(); };
 
-    // --- EQ 3 bande ---
-    const float eqLowDb  = getParam ("eqLow");
-    const float eqMidDb  = getParam ("eqMid");
-    const float eqHighDb = getParam ("eqHigh");
+    // --- EQ 3 bande (guadagni smorzati a blocco, anti-zipper) ---
+    constexpr float kEqSmooth = 0.15f;
+    eqLowSmoothDb  += (getParam ("eqLow")  - eqLowSmoothDb)  * kEqSmooth;
+    eqMidSmoothDb  += (getParam ("eqMid")  - eqMidSmoothDb)  * kEqSmooth;
+    eqHighSmoothDb += (getParam ("eqHigh") - eqHighSmoothDb) * kEqSmooth;
 
-    // Aggiorna i coefficienti dei filtri
-    eqLow.setLowShelf  (currentSampleRate, 200.0f,  eqLowDb);
-    eqMid.setPeak      (currentSampleRate, 1000.0f, eqMidDb, 1.0f);
-    eqHigh.setHighShelf(currentSampleRate, 4000.0f, eqHighDb);
+    // I coefficienti sono ricalcolati (con allocazione) solo se il guadagno
+    // smorzato cambia: nessuna allocazione allo stato stazionario.
+    eqLow.setLowShelf  (currentSampleRate, 200.0f,  eqLowSmoothDb);
+    eqMid.setPeak      (currentSampleRate, 1000.0f, eqMidSmoothDb, 1.0f);
+    eqHigh.setHighShelf(currentSampleRate, 4000.0f, eqHighSmoothDb);
 
     // Applica EQ (sempre, anche a guadagno 0 per linearita di fase)
     {
@@ -236,12 +266,16 @@ void MyVST3PluginAudioProcessor::processEffects (juce::AudioBuffer<float>& buffe
         eqHigh.filter.process (context);
     }
 
-    // --- Delay stereo ---
-    delayTimeSamples = static_cast<int> (getParam ("delayTime") * currentSampleRate);
+    // --- Delay stereo (delay-time a blocco, mix/feedback per-campione) ---
+    const float targetDelayTime = getParam ("delayTime"); // secondi
+    delayTimeSmooth += (targetDelayTime - delayTimeSmooth) * 0.1f;
+    delayTimeSamples = delayTimeSmooth * static_cast<float> (currentSampleRate);
     delayFeedback = getParam ("delayFeedback");
     delayMix = getParam ("delayMix");
+    delayMixSmooth.setTargetValue (delayMix);
+    delayFeedbackSmooth.setTargetValue (delayFeedback);
 
-    if (delayMix > 0.001f)
+    if (delayMixSmooth.getCurrentValue() > 0.001f || delayMix > 0.001f)
     {
         delayL.setDelay (delayTimeSamples);
         delayR.setDelay (delayTimeSamples);
@@ -254,23 +288,30 @@ void MyVST3PluginAudioProcessor::processEffects (juce::AudioBuffer<float>& buffe
             const float wetL = delayL.popSample (0);
             const float wetR = delayR.popSample (1);
 
-            // Cross-feedback per stereo width
-            delayL.pushSample (0, dryL + wetL * delayFeedback * 0.5f + wetR * delayFeedback * 0.5f);
-            delayR.pushSample (1, dryR + wetR * delayFeedback * 0.5f + wetL * delayFeedback * 0.5f);
+            const float fb  = delayFeedbackSmooth.getNextValue();
+            const float mix = delayMixSmooth.getNextValue();
 
-            buffer.setSample (0, i, dryL * (1.0f - delayMix) + wetL * delayMix);
+            // Cross-feedback per stereo width
+            delayL.pushSample (0, dryL + wetL * fb * 0.5f + wetR * fb * 0.5f);
+            delayR.pushSample (1, dryR + wetR * fb * 0.5f + wetL * fb * 0.5f);
+
+            buffer.setSample (0, i, dryL * (1.0f - mix) + wetL * mix);
             if (numChannels > 1)
-                buffer.setSample (1, i, dryR * (1.0f - delayMix) + wetR * delayMix);
+                buffer.setSample (1, i, dryR * (1.0f - mix) + wetR * mix);
         }
     }
 
-    // --- Riverbero ---
-    reverbMix = getParam ("reverbMix");
+    // --- Riverbero (parametri smorzati a blocco) ---
+    reverbMixSmooth  += (getParam ("reverbMix")     - reverbMixSmooth)  * 0.1f;
+    reverbSizeSmooth += (getParam ("reverbSize")    - reverbSizeSmooth) * 0.1f;
+    reverbDampSmooth += (getParam ("reverbDamping") - reverbDampSmooth) * 0.1f;
+    reverbMix = reverbMixSmooth;
+
     if (reverbMix > 0.001f)
     {
         juce::Reverb::Parameters rp;
-        rp.roomSize = getParam ("reverbSize");
-        rp.damping = getParam ("reverbDamping");
+        rp.roomSize = reverbSizeSmooth;
+        rp.damping = reverbDampSmooth;
         rp.wetLevel = reverbMix;
         rp.dryLevel = 1.0f - reverbMix;
         rp.width = 1.0f;

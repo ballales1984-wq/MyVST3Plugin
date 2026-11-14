@@ -5,3 +5,4 @@ build_kilo/
 *.exe
 *.vst3
 .kilo/
+ui_*.png

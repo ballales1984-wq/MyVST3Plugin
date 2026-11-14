@@ -25,6 +25,7 @@ juce_add_plugin(MyVST3Plugin
     NEEDS_MIDI_INPUT TRUE
     NEEDS_MIDI_OUTPUT FALSE
     IS_MIDI_EFFECT FALSE
+    IS_SYNTH TRUE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
     COPY_PLUGIN_AFTER_BUILD FALSE
 )
@@ -32,6 +33,7 @@ juce_add_plugin(MyVST3Plugin
 target_sources(MyVST3Plugin PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
+    Source/PresetManager.cpp
     Source/SynthVoice.h
     Source/SynthLookAndFeel.cpp
 )

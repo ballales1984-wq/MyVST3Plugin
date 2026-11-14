@@ -1,11 +1,13 @@
 #pragma once
 
 #include "PluginProcessor.h"
+#include "PresetManager.h"
 #include "SynthLookAndFeel.h"
 #include <JuceHeader.h>
 
 /** Interfaccia grafica: controlli rotativi, selettori di forma d'onda,
- *  selettore del target del LFO, tastiera MIDI a video e tastiera del PC.
+ *  selettore del target del LFO, tastiera MIDI a video (disegnata
+ *  dall'editor) e tastiera del PC.
  *  Usa SynthLookAndFeel per un aspetto moderno e professionale.
  *  Include sezioni per EQ, Delay e Riverbero. */
 class MyVST3PluginAudioProcessorEditor : public juce::AudioProcessorEditor,
@@ -20,11 +22,23 @@ public:
     /** Quando la finestra diventa visibile riprende il focus da tastiera. */
     void visibilityChanged() override;
 
+    // Mouse sulla tastiera disegnata
+    void mouseDown (const juce::MouseEvent&) override;
+    void mouseDrag (const juce::MouseEvent&) override;
+    void mouseUp (const juce::MouseEvent&) override;
+
 private:
     // Tastiera del computer: la mappa QWERTY viene letta a intervalli regolari.
     void timerCallback() override;
     /** Rilascia tutte le note suonate dalla tastiera del PC. */
     void releaseComputerKeys();
+
+    // Tastiera a video disegnata dall'editor
+    void drawKeyboard (juce::Graphics& g, juce::Rectangle<float> area);
+    int noteAtPosition (float x, float y) const;
+    void noteOnFromMouse (int note);
+    void noteOffFromMouse (int note);
+    int mouseNote = -1;
 
     MyVST3PluginAudioProcessor& audioProcessor;
     SynthLookAndFeel synthLnf;
@@ -35,14 +49,11 @@ private:
     juce::Label envSectionLabel;
     juce::Label filterSectionLabel;
     juce::Label lfoSectionLabel;
-    juce::Label fxSectionLabel;
     juce::Label eqSectionLabel;
     juce::Label delaySectionLabel;
     juce::Label reverbSectionLabel;
     juce::Label osc1WaveLabel;
     juce::Label osc2WaveLabel;
-
-    juce::MidiKeyboardComponent keyboardComponent;
 
     // Selettori di forma d'onda e destinazione del LFO.
     juce::ComboBox osc1Wave, osc2Wave, lfoTarget;
@@ -73,6 +84,31 @@ private:
     void setupCombo (juce::ComboBox& c, const juce::StringArray& items, const char* paramId);
     /** Crea una label di sezione con stile. */
     void setupSectionLabel (juce::Label& label, const juce::String& text, const juce::Colour& colour);
+
+    // --- Gestione preset ---
+    /** Ricarica la lista dei preset nella combo box. */
+    void refreshPresetBox();
+    /** Applica il preset selezionato. */
+    void loadPreset (int number);
+    /** Salva i parametri correnti (nuovo preset o sovrascrittura). */
+    void savePreset (bool asNew);
+    /** Rinomina il preset selezionato. */
+    void renamePreset();
+    /** Elimina il preset selezionato. */
+    void deletePreset();
+    /** Finestra di dialogo (asincrona) per inserire il nome. */
+    void showNameDialog (const juce::String& title,
+                         const juce::String& suggested,
+                         std::function<void (juce::String)> onDone);
+
+    PresetManager presetManager;
+    int currentPresetNumber = 0;
+    juce::Label presetLabel;
+    juce::ComboBox presetBox;
+    juce::TextButton presetSaveButton, presetSaveAsButton, presetRenameButton, presetDeleteButton;
+
+    // Tastiera disegnata: rettangolo in coordinate locali
+    juce::Rectangle<float> keyboardRect;
 
     // Mappatura tasti del PC -> tasti MIDI (una nota per ogni tasto).
     static constexpr int numComputerKeys = 17;

@@ -68,6 +68,9 @@ private:
     struct EqBand
     {
         juce::dsp::IIR::Filter<float> filter;
+        // Guardia: ricalcola i coefficienti solo se guadagno o SR cambiano.
+        float appliedGainDb = 1.0e9f;
+        double appliedFs = 0.0;
 
         void prepare (double sampleRate);
         void setLowShelf  (double sampleRate, float freq, float gainDb);
@@ -76,6 +79,13 @@ private:
     };
 
     EqBand eqLow, eqMid, eqHigh;
+
+    // Smoothing dei parametri FX (anti-zipper): one-pole a blocco per EQ/Reverb,
+    // SmoothedValue per-campione per il mix/feedback del delay.
+    float eqLowSmoothDb = 0.0f, eqMidSmoothDb = 0.0f, eqHighSmoothDb = 0.0f;
+    float reverbMixSmooth = 0.0f, reverbSizeSmooth = 0.5f, reverbDampSmooth = 0.5f;
+    float delayTimeSmooth = 0.0f;
+    juce::SmoothedValue<float> delayMixSmooth, delayFeedbackSmooth;
 
     /** Delay stereo con feedback e cross-feedback per width. */
     juce::dsp::DelayLine<float> delayL, delayR;
