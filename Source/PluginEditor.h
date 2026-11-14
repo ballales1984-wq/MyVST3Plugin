@@ -39,6 +39,8 @@ private:
     void noteOnFromMouse (int note);
     void noteOffFromMouse (int note);
     int mouseNote = -1;
+    // Nota MIDI realmente inviata (mouse + shift di ottava).
+    int mouseNotePlaying = -1;
 
     MyVST3PluginAudioProcessor& audioProcessor;
     SynthLookAndFeel synthLnf;
@@ -110,13 +112,14 @@ private:
     // Tastiera disegnata: rettangolo in coordinate locali
     juce::Rectangle<float> keyboardRect;
 
-    // Mappatura tasti del PC -> tasti MIDI (una nota per ogni tasto).
-    static constexpr int numComputerKeys = 17;
+    // Mappatura tasti del PC -> note MIDI: due manuali da un'ottava,
+    // con tasti bianchi e neri come un pianoforte (24 tasti).
+    static constexpr int numComputerKeys = 24;
     juce::KeyPress keyMap[numComputerKeys];
     int keyOffsets[numComputerKeys] = {};
     bool keyDown[numComputerKeys] = {};
 
-    // Shift di ottava: Z la abbassa, X la alza (base C4 = 60).
+    // Shift di ottava: '-' la abbassa, '+' la alza (anche tastierino numerico).
     int octaveShift = 0;
     bool octaveDownWasDown = false;
     bool octaveUpWasDown = false;

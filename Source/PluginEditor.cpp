@@ -10,12 +10,24 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     setSize (900, 700);
     setWantsKeyboardFocus (true);
 
-    // Mappa QWERTY: un semitono per tasto, come nei tracker.
-    const char* keys = "awsedftgyhujkolp;";
-    for (int i = 0; i < numComputerKeys && keys[i] != 0; ++i)
+    // Mapping pianoforte (2 ottave) in stile DAW: ogni tasto e' una nota
+    // precisa, con bianchi e neri al posto giusto.
+    struct KeyDef { int key; int semitone; };
+    static const KeyDef pianoMap[] = {
+        // Manuale basso: C4 - B4 (bianchi Z X C V B N M, neri S D G H J)
+        { 'z',  0 }, { 's',  1 }, { 'x',  2 }, { 'd',  3 }, { 'c',  4 },
+        { 'v',  5 }, { 'g',  6 }, { 'b',  7 }, { 'h',  8 }, { 'n',  9 },
+        { 'j', 10 }, { 'm', 11 },
+        // Manuale alto: C5 - B5 (bianchi Q W E R T Y U, neri 2 3 5 6 7)
+        { 'q', 12 }, { '2', 13 }, { 'w', 14 }, { '3', 15 }, { 'e', 16 },
+        { 'r', 17 }, { '5', 18 }, { 't', 19 }, { '6', 20 }, { 'y', 21 },
+        { '7', 22 }, { 'u', 23 }
+    };
+
+    for (int i = 0; i < numComputerKeys; ++i)
     {
-        keyMap[i] = juce::KeyPress (static_cast<int> (static_cast<unsigned char> (keys[i])));
-        keyOffsets[i] = i;
+        keyMap[i]     = juce::KeyPress (pianoMap[i].key);
+        keyOffsets[i] = pianoMap[i].semitone;
     }
 
     // Titolo principale
@@ -149,9 +161,11 @@ void MyVST3PluginAudioProcessorEditor::timerCallback()
         return;
     }
 
-    // Z = ottava sotto, X = ottava sopra: rilascia le note in corso.
-    const bool octaveDown = juce::KeyPress (static_cast<int> ('z')).isCurrentlyDown();
-    const bool octaveUp = juce::KeyPress (static_cast<int> ('x')).isCurrentlyDown();
+    // Shift di ottava: '-' / '+' (tastiera principale o tastierino numerico).
+    const bool octaveDown = juce::KeyPress (static_cast<int> ('-')).isCurrentlyDown()
+                         || juce::KeyPress (juce::KeyPress::numberPadSubtract).isCurrentlyDown();
+    const bool octaveUp   = juce::KeyPress (static_cast<int> ('+')).isCurrentlyDown()
+                         || juce::KeyPress (juce::KeyPress::numberPadAdd).isCurrentlyDown();
 
     if (octaveDown != octaveDownWasDown || octaveUp != octaveUpWasDown)
     {
@@ -164,6 +178,8 @@ void MyVST3PluginAudioProcessorEditor::timerCallback()
 
         octaveDownWasDown = octaveDown;
         octaveUpWasDown = octaveUp;
+
+        repaint(); // aggiorna l'indicatore di ottava
     }
 
     const int baseNote = 12 * (4 + octaveShift); // C4 = 60
@@ -290,6 +306,17 @@ void MyVST3PluginAudioProcessorEditor::paint (juce::Graphics& g)
     drawPanel ({ area.getX(), ry, colW, rowH }, synthLnf.accentGreen);
     drawPanel ({ area.getX() + colW + gap, ry, colW, rowH }, synthLnf.accentOrange);
     drawPanel ({ area.getX() + (colW + gap) * 2.0f, ry, colW, rowH }, synthLnf.accentPurple);
+
+    // Indicatore di ottava (in alto a destra, sopra la tastiera)
+    {
+        const juce::String octText = (octaveShift > 0 ? "OCTAVE +" : "OCTAVE ")
+                                  + juce::String (octaveShift);
+        g.setFont (juce::Font ("Segoe UI", 12.0f, juce::Font::bold));
+        g.setColour (octaveShift == 0 ? synthLnf.textPrimary.withAlpha (0.7f)
+                                      : synthLnf.accentOrange);
+        const juce::Rectangle<float> octArea (area.getRight() - 140.0f, area.getY() + 2.0f, 140.0f, 22.0f);
+        g.drawText (octText, octArea, juce::Justification::centredRight);
+    }
 
     // Pannello tastiera
     keyboardRect = { area.getX(), kbTop + 4.0f, area.getWidth(), kbH - 8.0f };
@@ -424,14 +451,30 @@ int MyVST3PluginAudioProcessorEditor::noteAtPosition (float x, float y) const
 
 void MyVST3PluginAudioProcessorEditor::noteOnFromMouse (int note)
 {
-    if (note > 0 && ! audioProcessor.keyboardState.isNoteOn (1, note))
-        audioProcessor.keyboardState.noteOn (1, note, 0.8f);
+    if (note <= 0)
+    {
+        mouseNotePlaying = -1;
+        return;
+    }
+
+    // Anche il mouse rispetta lo shift di ottava.
+    const int played = juce::jlimit (0, 127, note + 12 * octaveShift);
+    mouseNotePlaying = played;
+
+    if (! audioProcessor.keyboardState.isNoteOn (1, played))
+        audioProcessor.keyboardState.noteOn (1, played, 0.8f);
 }
 
-void MyVST3PluginAudioProcessorEditor::noteOffFromMouse (int note)
+void MyVST3PluginAudioProcessorEditor::noteOffFromMouse (int)
 {
-    if (note > 0 && audioProcessor.keyboardState.isNoteOn (1, note))
-        audioProcessor.keyboardState.noteOff (1, note, 0.0f);
+    // Rilascia la nota effettivamente inviata, non quella calcolata ora.
+    if (mouseNotePlaying > 0)
+    {
+        if (audioProcessor.keyboardState.isNoteOn (1, mouseNotePlaying))
+            audioProcessor.keyboardState.noteOff (1, mouseNotePlaying, 0.0f);
+
+        mouseNotePlaying = -1;
+    }
 }
 
 void MyVST3PluginAudioProcessorEditor::mouseDown (const juce::MouseEvent& e)

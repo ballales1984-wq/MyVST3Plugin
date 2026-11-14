@@ -41,6 +41,22 @@ JUCE-based VST3/Standalone synthesizer for Windows (and macOS via CI).
 .\test_plugin.bat
 ```
 
+## Computer keyboard mapping
+Two manuals of one octave each, laid out like a piano (white and black keys):
+
+| Lower manual (C4-B4) | C | C# | D | D# | E | F | F# | G | G# | A | A# | B |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| key | Z | S | X | D | C | V | G | B | H | N | J | M |
+
+| Upper manual (C5-B5) | C | C# | D | D# | E | F | F# | G | G# | A | A# | B |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| key | Q | 2 | W | 3 | E | R | 5 | T | 6 | Y | 7 | U |
+
+- `-` / `+` shift the octave down / up (base C4, range C2..C6); both the main
+  keyboard and the numeric keypad work. The current octave is shown above the
+  keyboard.
+- The editor must hold keyboard focus; played notes light up on the drawn keyboard.
+
 ## CI
 GitHub Actions builds Release on Windows (`windows-latest`, MSVC/NMake) and
 macOS (`macOS-latest`, Unix Makefiles) on every push/PR to `master`, and
