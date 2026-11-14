@@ -81,6 +81,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout MyVST3PluginAudioProcessor::
 void MyVST3PluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     currentSampleRate = sampleRate;
+    polyGain.reset (sampleRate, 0.02f);
+    polyGain.setTargetValue (1.0f);
     synth.setCurrentPlaybackSampleRate (sampleRate);
     // Ogni voce riceve sample rate e numero di canali d'uscita.
     for (int i = 0; i < synth.getNumVoices(); ++i)
@@ -252,7 +254,8 @@ void MyVST3PluginAudioProcessor::processEffects (juce::AudioBuffer<float>& buffe
     eqHighSmoothDb += (getParam ("eqHigh") - eqHighSmoothDb) * kEqSmooth;
 
     // I coefficienti sono ricalcolati (con allocazione) solo se il guadagno
-    // smorzato cambia: nessuna allocazione allo stato stazionario.
+    // Coefficients are recomputed (with allocation) only if the smoothed gain
+    // changes: no allocation at steady state.
     eqLow.setLowShelf  (currentSampleRate, 200.0f,  eqLowSmoothDb);
     eqMid.setPeak      (currentSampleRate, 1000.0f, eqMidSmoothDb, 1.0f);
     eqHigh.setHighShelf(currentSampleRate, 4000.0f, eqHighSmoothDb);
@@ -337,6 +340,24 @@ void MyVST3PluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     // Aggiorna lo stato della tastiera virtuale, poi fa suonare il synth.
     keyboardState.processNextMidiBuffer (midiMessages, 0, buffer.getNumSamples(), true);
     synth.renderNextBlock (buffer, midiMessages, 0, buffer.getNumSamples());
+
+    // Compensazione di guadagno: con piu' note attive il livello va ridotto
+    // (1/sqrt(n)) per evitare la saturazione sugli accordi.
+    int activeVoices = 0;
+    for (int i = 0; i < synth.getNumVoices(); ++i)
+        if (auto* v = synth.getVoice (i); v != nullptr && v->isVoiceActive())
+            ++activeVoices;
+
+    polyGain.setTargetValue (1.0f / std::sqrt (static_cast<float> (juce::jmax (1, activeVoices))));
+
+    const int numChannels = buffer.getNumChannels();
+    const int numSamples  = buffer.getNumSamples();
+    for (int i = 0; i < numSamples; ++i)
+    {
+        const float g = polyGain.getNextValue();
+        for (int ch = 0; ch < numChannels; ++ch)
+            buffer.getWritePointer (ch)[i] *= g;
+    }
 
     // Applica la catena di effetti
     processEffects (buffer);

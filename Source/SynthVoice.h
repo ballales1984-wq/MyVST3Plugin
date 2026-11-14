@@ -9,8 +9,8 @@ struct SynthSound : public juce::SynthesiserSound
     bool appliesToChannel (int) override { return true; }
 };
 
-/** BLEP (Band-Limited Step): integra un salto discontinuo su un campione
- *  per eliminare l'aliasing delle onde saw e square. */
+/** BLEP (Band-Limited Step): integrates a discontinuous step over one sample
+ *  to eliminate aliasing in saw and square waves. */
 inline double blep (double t)
 {
     if (t <= 0.0 || t >= 1.0)
@@ -42,8 +42,12 @@ public:
         updateParams();
         adsr.noteOn();
 
-        unisonPhase1.assign (static_cast<size_t> (unisonCount), 0.0);
-        unisonPhase2.assign (static_cast<size_t> (unisonCount), 0.0);
+        // Le fasi sono preallocate in prepareToPlay: resize non rialloca.
+        const size_t unison = static_cast<size_t> (juce::jmax (1, unisonCount));
+        unisonPhase1.resize (unison);
+        unisonPhase2.resize (unison);
+        std::fill (unisonPhase1.begin(), unisonPhase1.end(), 0.0);
+        std::fill (unisonPhase2.begin(), unisonPhase2.end(), 0.0);
     }
 
     void stopNote (float, bool allowTailOff) override
@@ -79,6 +83,10 @@ public:
         filter.setType (juce::dsp::StateVariableTPTFilterType::lowpass);
         filter.reset();
 
+        // Capacita' massima di fasi unisono: evita allocazioni in startNote.
+        unisonPhase1.assign (8, 0.0);
+        unisonPhase2.assign (8, 0.0);
+
         updateParams();
     }
 
@@ -89,7 +97,7 @@ public:
 
         updateParams();
 
-        // Numero di oscillatori unisono effettivamente allocati.
+        // Number of unison oscillators actually allocated.
         const int voices = static_cast<int> (unisonPhase1.size());
 
         if (voices <= 0)

@@ -100,5 +100,8 @@ private:
 
     double currentSampleRate = 44100.0;
 
+    // Compensazione di guadagno in funzione del numero di voci attive.
+    juce::SmoothedValue<float> polyGain;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyVST3PluginAudioProcessor)
 };
