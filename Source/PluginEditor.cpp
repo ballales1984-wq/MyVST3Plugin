@@ -79,7 +79,7 @@ MyVST3PluginAudioProcessorEditor::MyVST3PluginAudioProcessorEditor (MyVST3Plugin
     refreshPresetBox();
 
     // Voci dei menu a tendina.
-    juce::StringArray waves { "Sine", "Square", "Saw", "Triangle" };
+    juce::StringArray waves { "Sine", "Square", "Saw", "Triangle", "Pulse", "FM", "Organ" };
     juce::StringArray targets { "Pitch", "Filter", "Amp" };
 
     setupCombo (osc1Wave, waves, "osc1Wave");
@@ -514,10 +514,12 @@ void MyVST3PluginAudioProcessorEditor::resized()
         oscSectionLabel.setBounds (header.reduced (4.0f, 0.0f).toNearestInt());
 
         auto comboRow = col.removeFromTop (24.0f);
-        const float cw = (comboRow.getWidth() - 12.0f) * 0.5f;
-        osc1WaveLabel.setBounds (comboRow.removeFromLeft (cw).reduced (2.0f).toNearestInt());
-        osc2WaveLabel.setBounds (comboRow.removeFromLeft (cw).reduced (2.0f).toNearestInt());
-        osc1Wave.setBounds (comboRow.removeFromLeft (cw).reduced (2.0f).toNearestInt());
+        // Metà sinistra: label "Osc 1" + combo forma d'onda
+        auto osc1 = comboRow.removeFromLeft (comboRow.getWidth() * 0.5f);
+        osc1WaveLabel.setBounds (osc1.removeFromLeft (34.0f).reduced (2.0f).toNearestInt());
+        osc1Wave.setBounds (osc1.reduced (2.0f).toNearestInt());
+        // Metà destra: label "Osc 2" + combo forma d'onda
+        osc2WaveLabel.setBounds (comboRow.removeFromLeft (34.0f).reduced (2.0f).toNearestInt());
         osc2Wave.setBounds (comboRow.reduced (2.0f).toNearestInt());
 
         placeRow (col, { &osc1Level, &osc2Level, &osc2Detune });

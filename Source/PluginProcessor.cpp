@@ -25,7 +25,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout MyVST3PluginAudioProcessor::
     auto id = [] (const char* s) { return juce::ParameterID (s, 1); };
 
     // Forme d'onda disponibili per entrambi gli oscillatori.
-    juce::StringArray waves { "Sine", "Square", "Saw", "Triangle" };
+    juce::StringArray waves { "Sine", "Square", "Saw", "Triangle", "Pulse", "FM", "Organ" };
     // Destinazioni modulabili dal LFO.
     juce::StringArray lfoTargets { "Pitch", "Filter", "Amp" };
 

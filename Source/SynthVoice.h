@@ -196,6 +196,24 @@ private:
             case 3:
                 return static_cast<float> (2.0 * std::abs (2.0 * t - 1.0) - 1.0);
 
+            case 4: // Pulse 25% (band-limited)
+            {
+                float v = t < 0.25 ? 1.0f : -1.0f;
+                if (t < 0.25 && t + dpNorm >= 0.25)
+                    v -= static_cast<float> (2.0 * blep (t + dpNorm - 0.25));
+                if (t + dpNorm >= 1.0)
+                    v += static_cast<float> (2.0 * blep (t + dpNorm - 1.0));
+                return v;
+            }
+
+            case 5: // FM (phase modulation)
+                return static_cast<float> (std::sin (phase + 2.0 * std::sin (phase)));
+
+            case 6: // Organ (somma di armoniche)
+                return static_cast<float> (std::sin (phase)
+                                         + 0.5  * std::sin (2.0 * phase)
+                                         + 0.25 * std::sin (3.0 * phase));
+
             default:
                 return static_cast<float> (std::sin (phase));
         }
