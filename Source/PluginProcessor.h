@@ -103,5 +103,15 @@ private:
     // Compensazione di guadagno in funzione del numero di voci attive.
     juce::SmoothedValue<float> polyGain;
 
+    // --- Limiter di uscita: controllo di picco senza latenza (nessun lookahead) ---
+    /** Riduce il guadagno quando il picco supera la soglia; attacco 0.5 ms, rilascio 80 ms. */
+    void processLimiter (juce::AudioBuffer<float>& buffer);
+    float limiterEnvelope = 0.0f;
+    float limiterGain = 1.0f;
+    float limiterAttackCoeff = 0.0f;
+    float limiterReleaseCoeff = 0.0f;
+    /** Soglia di picco (~ -0.45 dBFS): lascia un piccolo margine anti-clipping. */
+    static constexpr float limiterThreshold = 0.95f;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MyVST3PluginAudioProcessor)
 };

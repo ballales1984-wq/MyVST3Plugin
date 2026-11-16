@@ -227,6 +227,28 @@ void MyVST3PluginAudioProcessorEditor::releaseComputerKeys()
 }
 
 // Slider rotativo con casella di testo e attachment al parametro.
+namespace
+{
+/** Unita' di misura per i parametri che ne hanno una naturale.
+ *  Il valore non viene scalato: viene solo aggiunto il suffisso. */
+juce::String unitForParam (const juce::String& id)
+{
+    if (id == "attack" || id == "decay" || id == "release" || id == "delayTime")
+        return "s";
+
+    if (id == "cutoff" || id == "filterEnv" || id == "lfoRate")
+        return "Hz";
+
+    if (id == "eqLow" || id == "eqMid" || id == "eqHigh")
+        return "dB";
+
+    if (id == "osc2Detune" || id == "unisonDetune")
+        return "ct";
+
+    return {};
+}
+}
+
 void MyVST3PluginAudioProcessorEditor::setupSlider (juce::Slider& s, const juce::String& name, const char* paramId)
 {
     s.setSliderStyle (juce::Slider::RotaryHorizontalVerticalDrag);
@@ -253,6 +275,36 @@ void MyVST3PluginAudioProcessorEditor::setupSlider (juce::Slider& s, const juce:
     else if (id.startsWith ("reverb"))
         accent = synthLnf.accentPurple;
     s.getProperties().set ("accent", static_cast<int> (accent.getARGB()));
+
+    // Unita' di misura nel textbox: il valore non viene trasformato.
+    if (const auto unit = unitForParam (id); unit.isNotEmpty())
+    {
+        auto* param = dynamic_cast<juce::RangedAudioParameter*> (
+            audioProcessor.parameters.getParameter (id));
+
+        if (param != nullptr)
+        {
+            const auto suffix = " " + unit;
+
+            s.textFromValueFunction = [param, suffix] (double v)
+            {
+                return param->getText (param->convertTo0to1 ((float) v), 0) + suffix;
+            };
+
+            s.valueFromTextFunction = [param, suffix] (const juce::String& text)
+            {
+                auto t = text.trim();
+
+                if (t.endsWithIgnoreCase (suffix))
+                    t = t.dropLastCharacters (suffix.length()).trimEnd();
+
+                return (double) param->convertFrom0to1 (param->getValueForText (t));
+            };
+
+            // L'attachment ha formattato il textbox prima della sostituzione.
+            s.updateText();
+        }
+    }
 
     // Etichetta con il nome del parametro, mostrata sopra il knob.
     auto label = std::make_unique<juce::Label>();

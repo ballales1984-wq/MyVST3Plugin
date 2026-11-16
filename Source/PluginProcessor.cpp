@@ -83,6 +83,12 @@ void MyVST3PluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPe
     currentSampleRate = sampleRate;
     polyGain.reset (sampleRate, 0.02f);
     polyGain.setTargetValue (1.0f);
+
+    // Limiter: attacco 0.5 ms, rilascio 80 ms.
+    limiterAttackCoeff  = static_cast<float> (std::exp (-1.0 / (0.0005 * sampleRate)));
+    limiterReleaseCoeff = static_cast<float> (std::exp (-1.0 / (0.0800 * sampleRate)));
+    limiterEnvelope = 0.0f;
+    limiterGain = 1.0f;
     synth.setCurrentPlaybackSampleRate (sampleRate);
     // Ogni voce riceve sample rate e numero di canali d'uscita.
     for (int i = 0; i < synth.getNumVoices(); ++i)
@@ -326,6 +332,46 @@ void MyVST3PluginAudioProcessor::processEffects (juce::AudioBuffer<float>& buffe
                                   buffer.getWritePointer (1),
                                   numSamples);
         }
+    }
+
+    // Limiter sempre attivo: ultima barriera contro il clipping.
+    processLimiter (buffer);
+}
+
+// =============================================================================
+// Limiter di uscita
+// =============================================================================
+void MyVST3PluginAudioProcessor::processLimiter (juce::AudioBuffer<float>& buffer)
+{
+    const int numSamples  = buffer.getNumSamples();
+    const int numChannels = buffer.getNumChannels();
+
+    if (numSamples <= 0 || numChannels <= 0)
+        return;
+
+    auto* outL = buffer.getWritePointer (0);
+    auto* outR = numChannels > 1 ? buffer.getWritePointer (1) : nullptr;
+
+    for (int i = 0; i < numSamples; ++i)
+    {
+        const float peak = std::max (std::abs (outL[i]),
+                                     outR != nullptr ? std::abs (outR[i]) : 0.0f);
+
+        // Inviluppo di picco: attacco rapido, rilascio lento.
+        const float envCoeff = peak > limiterEnvelope ? limiterAttackCoeff : limiterReleaseCoeff;
+        limiterEnvelope = envCoeff * limiterEnvelope + (1.0f - envCoeff) * peak;
+
+        // Guadagno di riduzione (mai > 1), smorzato per evitare distorsione.
+        const float targetGain = limiterEnvelope > limiterThreshold
+                                     ? limiterThreshold / limiterEnvelope
+                                     : 1.0f;
+
+        const float gainCoeff = targetGain < limiterGain ? limiterAttackCoeff : limiterReleaseCoeff;
+        limiterGain = gainCoeff * limiterGain + (1.0f - gainCoeff) * targetGain;
+
+        outL[i] *= limiterGain;
+        if (outR != nullptr)
+            outR[i] *= limiterGain;
     }
 }
 
