@@ -751,9 +751,19 @@ void MyVST3PluginAudioProcessorEditor::loadPreset (int number)
     if (state == nullptr)
         return;
 
-    const auto tree = juce::ValueTree::fromXml (*state);
+    auto tree = juce::ValueTree::fromXml (*state);
 
     if (! tree.isValid())
+        return;
+
+    // I preset sono salvati come <PRESET><STATE><PARAMETERS>: replaceState
+    // vuole il nodo PARAMETERS (i figli PARAM hanno l'attributo id).
+    // Con un livello in piu' non viene aggiornato nessun parametro.
+    if (tree.hasType ("STATE"))
+        if (auto params = tree.getChildWithName ("PARAMETERS"); params.isValid())
+            tree = params;
+
+    if (! tree.hasType ("PARAMETERS"))
         return;
 
     audioProcessor.parameters.replaceState (tree);
